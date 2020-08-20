@@ -6,11 +6,13 @@ import kotlinx.serialization.Serializable
 data class KmpCategoryGetResponse(
         override var parentList:MutableList<KmpCategoryInfo>? = null,
         var childList: MutableList<KmpCategoryInfo>? = null,
-        override var item:KmpCategoryInfo? = null,
+        override var type:String? = null,
+        override var label: String? = null,
         override var status:KmpCategoryError? = null
 ): KmpCategoryResponse(
         parentList = parentList,
-        item = item,
+        type = type,
+        label = label,
         status = status
 ) {
 }

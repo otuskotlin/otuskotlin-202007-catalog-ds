@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.multiplatform.transport.validators
+package ru.otus.otuskotlin.catalogue.multiplatform.common.validators
 
 class HandleError(
         val code:String = "",
