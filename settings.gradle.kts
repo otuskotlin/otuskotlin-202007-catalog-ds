@@ -11,6 +11,4 @@ pluginManagement {
 }
 
 include("ok-catalogue-be-common")
-include("ok-catalogue-mp-transport-models")
-include("ok-catalogue-mp-common")
 include("ok-catalogue-transport-common")
