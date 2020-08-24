@@ -16,7 +16,7 @@ internal class CategoryModelTest{
         cat.label = "News"
         assertEquals("feed", cat.type)
         assertEquals("News", cat.label)
-        assertEquals(null, cat.parent)
+        assertEquals("", cat.parentId)
         assertEquals(LocalDate.now(), cat.modifyDate)
     }
 

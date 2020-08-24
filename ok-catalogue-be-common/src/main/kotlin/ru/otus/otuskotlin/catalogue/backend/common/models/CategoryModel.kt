@@ -8,8 +8,9 @@ data class CategoryModel(
     var id:String = "",
     var type:String = "",
     var label:String = "",
-    var parent:CategoryModel? = null,
+    var parentId:String = "",
     val children:ChildrenModel<CategoryModel> = ChildrenModel(),
+    var items:MutableList<ItemModel> = mutableListOf(),
     val creationDate: LocalDate = LocalDate.EPOCH,
     var modifyDate: LocalDate = LocalDate.EPOCH
 ) {
@@ -25,7 +26,7 @@ data class CategoryModel(
 
     override fun equals(other: Any?): Boolean {
         if(other is CategoryModel){
-            return (other.parent == this.parent) &&
+            return (other.parentId == this.parentId) &&
                     (other.label == this.label)
         }
         return super.equals(other)
