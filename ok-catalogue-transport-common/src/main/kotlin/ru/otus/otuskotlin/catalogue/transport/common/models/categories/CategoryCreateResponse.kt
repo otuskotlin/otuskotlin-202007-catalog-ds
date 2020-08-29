@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.transport.common.models
+package ru.otus.otuskotlin.catalogue.transport.common.models.categories
 
 import kotlinx.serialization.Serializable
 

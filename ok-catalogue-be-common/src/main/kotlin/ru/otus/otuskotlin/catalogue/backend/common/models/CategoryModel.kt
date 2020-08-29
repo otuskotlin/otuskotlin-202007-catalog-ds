@@ -1,12 +1,14 @@
 package ru.otus.otuskotlin.catalogue.backend.common.models
 
+import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import java.lang.Exception
 import java.time.LocalDate
 import java.util.*
 
+
 data class CategoryModel(
     var id:String = "",
-    var type:String = "",
+    var type:CategoryType = CategoryType.NONE,
     var label:String = "",
     var parentId:String = "",
     val children:ChildrenModel<CategoryModel> = ChildrenModel(),

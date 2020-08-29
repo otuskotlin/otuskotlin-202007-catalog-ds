@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.transport.common.models
+package ru.otus.otuskotlin.catalogue.transport.common.models.categories
 
 import kotlinx.serialization.Serializable
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
@@ -10,7 +10,7 @@ data class CategoryGetResponse(
         var itemList: MutableList<ItemInfo>? = null,
         override var type:String? = null,
         override var label: String? = null,
-        override var status:CategoryError? = null
+        override var status: CategoryError? = null
 ): CategoryResponse(
         parentList = parentList,
         type = type,
