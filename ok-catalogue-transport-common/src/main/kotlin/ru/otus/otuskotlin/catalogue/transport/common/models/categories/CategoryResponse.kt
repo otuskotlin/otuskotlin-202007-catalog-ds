@@ -5,6 +5,10 @@ import kotlinx.serialization.Transient
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryError
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryInfo
 
+/**
+ *  Deprecated
+ *  To think about to use it
+ */
 @Serializable
 abstract class CategoryResponse(
         @Transient open var parentList:MutableList<CategoryInfo>? = null,

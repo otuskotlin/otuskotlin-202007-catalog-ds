@@ -5,14 +5,21 @@ import java.lang.Exception
 import java.time.LocalDate
 import java.util.*
 
-
+/**
+ *  Class used for new category creation
+ */
 data class CategoryModel(
     var id:String = "",
     var type:CategoryType = CategoryType.NONE,
     var label:String = "",
     var parentId:String = "",
-    val children:ChildrenModel<CategoryModel> = ChildrenModel(),
-    var items:MutableList<ItemModel> = mutableListOf(),
+    val childrenId:MutableList<String> = mutableListOf(),
+    val itemsId:MutableList<String> = mutableListOf(),
+
+    // Deprecated, don't need for creation
+    //val children:ChildrenModel<CategoryModel> = ChildrenModel(),
+    //var items:MutableList<ItemModel> = mutableListOf(),
+
     val creationDate: LocalDate = LocalDate.EPOCH,
     var modifyDate: LocalDate = LocalDate.EPOCH
 ) {

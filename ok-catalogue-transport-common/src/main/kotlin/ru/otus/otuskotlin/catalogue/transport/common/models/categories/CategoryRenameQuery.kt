@@ -5,5 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CategoryRenameQuery(
     var categoryId: String? = null,
-    var modLabel: String? = null
-)
+    var modLabel: String? = null,
+    var debug:Debug? = null
+){
+    @Serializable
+    class Debug
+}

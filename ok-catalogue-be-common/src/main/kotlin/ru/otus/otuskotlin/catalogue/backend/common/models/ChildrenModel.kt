@@ -1,5 +1,9 @@
 package ru.otus.otuskotlin.catalogue.backend.common.models
 
+/**
+ * Класс подразделов с добавлением уникальных подразделов
+ * убрал пока
+ */
 class ChildrenModel<T>: ArrayList<T>() {
 
     override fun add(element: T): Boolean {

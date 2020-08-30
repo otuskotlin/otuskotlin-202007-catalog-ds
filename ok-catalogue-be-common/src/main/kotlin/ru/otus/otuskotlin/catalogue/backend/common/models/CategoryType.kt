@@ -1,5 +1,9 @@
 package ru.otus.otuskotlin.catalogue.backend.common.models
 
+/**
+ *  Types of categories
+ *  Use to define table for items in database and communicate with external services
+ */
 enum class CategoryType(val type: String) {
     NONE(""),
     NOTES("notes");

@@ -10,6 +10,7 @@ data class CategoryError(
 ) {
         @Serializable
         enum class Level{
+            NONE,
             SUCCESS,
             WARNING,
             ERROR
