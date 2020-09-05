@@ -1,6 +1,7 @@
 package ru.otus.otuskotlin.catalogue.backend.common.models
 
 /**
+ *  Deprecated, include in CategoryModel
  *  Tree of catalogue structure
  */
 data class CategoryInfoModel(

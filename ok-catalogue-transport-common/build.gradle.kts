@@ -13,7 +13,8 @@ val serializationVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion")
+    //implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationVersion")
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
 }

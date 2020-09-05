@@ -10,15 +10,12 @@ import java.util.*
  */
 data class CategoryModel(
     var id:String = "",
-    var type:CategoryType = CategoryType.NONE,
+    var type:String = "",
     var label:String = "",
     var parentId:String = "",
-    val childrenId:MutableList<String> = mutableListOf(),
-    val itemsId:MutableList<String> = mutableListOf(),
-
-    // Deprecated, don't need for creation
-    //val children:ChildrenModel<CategoryModel> = ChildrenModel(),
-    //var items:MutableList<ItemModel> = mutableListOf(),
+    val parents:MutableList<CategoryModel> = mutableListOf(),
+    val children:MutableSet<CategoryModel> = mutableSetOf(),
+    val items:MutableSet<ItemModel> = mutableSetOf(),
 
     val creationDate: LocalDate = LocalDate.EPOCH,
     var modifyDate: LocalDate = LocalDate.EPOCH
@@ -33,29 +30,4 @@ data class CategoryModel(
         val NONE = CategoryModel()
     }
 
-    override fun equals(other: Any?): Boolean {
-        if(other is CategoryModel){
-            return (other.parentId == this.parentId) &&
-                    (other.label == this.label)
-        }
-        return super.equals(other)
-    }
-
-    /*fun addChild(
-        _type: String = "",
-        _label: String = ""
-    ) {
-        val child = CategoryModel(
-            type = _type,
-            label = _label,
-            parent = this
-        )
-        children.forEach {
-            if (it == child) return
-        }
-
-        val mediator = children.toMutableList()
-        mediator.add(child)
-        children = mediator.toList()
-    }*/
 }
