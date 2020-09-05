@@ -9,14 +9,14 @@ class IsEmptyValidator(
     private val message:String = "One field is empty.",
     private val level: HandleError.Level = HandleError.Level.ERROR
 ): IValidator<String> {
-    override fun validate(arg: String): ValidationResult {
+    override fun validate(arg: String): ValidationResult =
         if(arg.isEmpty())
-            return ValidationResult(
+            ValidationResult(
                 HandleError(
                     code = code,
                     message = message,
                     level = level
             ))
-        return ValidationResult()
-    }
+        else ValidationResult()
+
 }
