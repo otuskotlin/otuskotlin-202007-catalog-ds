@@ -5,9 +5,6 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 
 
-/**
- *  Стоит ли контексты категории и итема держать в одном контексте?
- */
 data class CategoryContext(
         var requestCategoryId: String = "",
         var requestItemId: String = "",

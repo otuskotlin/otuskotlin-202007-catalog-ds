@@ -24,6 +24,10 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":ok-catalogue-be-common"))
+    implementation(project(":ok-catalogue-transport-common"))
+    implementation(project(":ok-catalogue-transport-rest"))
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
