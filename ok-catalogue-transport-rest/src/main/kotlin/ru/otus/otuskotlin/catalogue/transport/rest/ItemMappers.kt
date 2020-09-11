@@ -13,7 +13,6 @@ import java.lang.Exception
  *  File contained mappers for operations with items
  */
 
-
 internal fun CategoryContext.setQuery(delItem: ItemDeleteQuery) = this.apply {
     requestCategoryId = delItem.categoryId?:""
     requestItemId = delItem.itemId?:""

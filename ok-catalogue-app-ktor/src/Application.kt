@@ -8,12 +8,21 @@ import io.ktor.http.*
 import io.ktor.content.*
 import io.ktor.http.content.*
 import io.ktor.features.*
+import io.ktor.serialization.json
+import io.ktor.serialization.serialization
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.json
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryCreateQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryGetQuery
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+
+    val service = CategoryService()
+
     install(CORS) {
         method(HttpMethod.Options)
         method(HttpMethod.Put)
@@ -26,11 +35,28 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(ContentNegotiation) {
+        json(
+            contentType = ContentType.Application.Json,
+            json = Json {
+                prettyPrint = true
+            }
+        )
     }
 
     routing {
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
+        }
+
+        route("/catalogue"){
+            post("/get") {
+                val query = call.receive<CategoryGetQuery>()
+                call.respond(service.get(query))
+            }
+            post("/create") {
+                val query = call.receive<CategoryCreateQuery>()
+                call.respond(service.create(query))
+            }
         }
 
         // Static feature. Try to access `/static/ktor_logo.svg`

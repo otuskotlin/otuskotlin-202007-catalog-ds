@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation(project(":ok-catalogue-be-common"))
+    implementation(project(":ok-catalogue-backend-common"))
     implementation(project(":ok-catalogue-transport-common"))
 
     testImplementation(kotlin("test"))

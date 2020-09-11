@@ -10,7 +10,7 @@ pluginManagement {
     }
 }
 
-include("ok-catalogue-be-common")
+include("ok-catalogue-backend-common")
 include("ok-catalogue-transport-common")
 include("ok-catalogue-transport-rest")
 include("ok-catalogue-app-ktor")
