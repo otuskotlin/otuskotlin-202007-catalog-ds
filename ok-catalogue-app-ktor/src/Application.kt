@@ -12,8 +12,12 @@ import io.ktor.serialization.json
 import io.ktor.serialization.serialization
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.serializersModuleOf
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryCreateQuery
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryGetQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.NoteInfo
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -36,8 +40,16 @@ fun Application.module(testing: Boolean = false) {
 
     install(ContentNegotiation) {
         json(
-            contentType = ContentType.Application.Json,
-            json = Json {
+
+                contentType = ContentType.Application.Json,
+                json = Json {
+                 serializersModule = SerializersModule {
+                        polymorphic(
+                                baseClass = ItemInfo::class,
+                                actualClass = NoteInfo::class,
+                                actualSerializer = NoteInfo.serializer()
+                        )
+                    }
                 prettyPrint = true
             }
         )

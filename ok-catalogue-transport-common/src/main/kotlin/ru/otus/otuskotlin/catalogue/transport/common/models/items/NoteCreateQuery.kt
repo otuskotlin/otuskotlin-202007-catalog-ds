@@ -4,18 +4,19 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NoteCreateQuery(
-        override var id: String? = null,
-        override var categoryId: String? = null,
-        override var header: String? = null,
-        override var description: String? = null,
+        var id: String? = null,
+        var categoryId: String? = null,
+        var header: String? = null,
+        var description: String? = null,
         var preview: String? = null,
         var debug:Debug? = null
-):ItemInfo(
-    id = id,
-    categoryId = categoryId,
-    header = header,
-    description = description
-) {
+)//:ItemInfo(
+//    id = id,
+//    categoryId = categoryId,
+//    header = header,
+//    description = description
+//)
+{
     @Serializable
     class Debug
 }
