@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.util.*
 
 fun CategoryContext.setQuery(create: CategoryCreateQuery) = this.apply {
-    reguestCategory = create.model()
+    requestCategory = create.model()
 }
 
 fun CategoryContext.setQuery(delete: CategoryDeleteQuery) = this.apply {
@@ -49,7 +49,7 @@ fun CategoryCreateQuery.model() = CategoryModel(
     creationDate = LocalDate.now(),
     //type = try{CategoryType.valueOf(type?:"".toLowerCase())} catch (e:IllegalArgumentException){CategoryType.NONE}
     //type = CategoryType.NONE.findByArg((type?:"").toLowerCase())
-    type = type?:""
+    type = type?:"".toLowerCase()
 )
 
 fun CategoryModel.toDTO() = CategoryDTO(

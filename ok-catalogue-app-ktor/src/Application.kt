@@ -5,19 +5,17 @@ import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.routing.*
 import io.ktor.http.*
-import io.ktor.content.*
 import io.ktor.http.content.*
 import io.ktor.features.*
 import io.ktor.serialization.json
-import io.ktor.serialization.serialization
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.serializersModuleOf
-import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryCreateQuery
-import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryGetQuery
-import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
-import ru.otus.otuskotlin.catalogue.transport.common.models.items.NoteInfo
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemCreateQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.NoteCreateQuery
+import ru.otus.otuskotlin.services.CategoryService
+import ru.otus.otuskotlin.services.ItemService
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -26,6 +24,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module(testing: Boolean = false) {
 
     val service = CategoryService()
+    val itemService = ItemService()
 
     install(CORS) {
         method(HttpMethod.Options)
@@ -43,13 +42,8 @@ fun Application.module(testing: Boolean = false) {
 
                 contentType = ContentType.Application.Json,
                 json = Json {
-                 serializersModule = SerializersModule {
-                        polymorphic(
-                                baseClass = ItemInfo::class,
-                                actualClass = NoteInfo::class,
-                                actualSerializer = NoteInfo.serializer()
-                        )
-                    }
+
+                    classDiscriminator = "#class"
                 prettyPrint = true
             }
         )
@@ -69,6 +63,27 @@ fun Application.module(testing: Boolean = false) {
                 val query = call.receive<CategoryCreateQuery>()
                 call.respond(service.create(query))
             }
+            post("/delete") {
+                val query = call.receive<CategoryDeleteQuery>()
+                call.respond(service.delete(query))
+            }
+            post("/rename") {
+                val query = call.receive<CategoryRenameQuery>()
+                call.respond(service.rename(query))
+            }
+            post("/map") {
+                val query = call.receive<CategoryGetMapQuery>()
+                call.respond(service.map(query))
+            }
+            post ("/addItem" ){
+                val query = call.receive<ItemCreateQuery>()
+                call.respond(itemService.addItem(query))
+            }
+            post("/delItem"){
+                val query = call.receive<ItemDeleteQuery>()
+                call.respond(itemService.delItem(query))
+            }
+
         }
 
         // Static feature. Try to access `/static/ktor_logo.svg`
