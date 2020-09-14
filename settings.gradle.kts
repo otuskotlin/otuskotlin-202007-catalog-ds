@@ -3,10 +3,12 @@ rootProject.name = "ok-202007-catalogue"
 pluginManagement {
     plugins {
         val kotlinVersion: String by settings
+        val bmuschkoVersion: String by settings
 
         kotlin("multiplatform") version kotlinVersion apply false
         kotlin("jvm") version kotlinVersion apply false
         kotlin("plugin.serialization") version kotlinVersion apply false
+        id("com.bmuschko.docker-java-application") version bmuschkoVersion
     }
 }
 
