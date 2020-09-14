@@ -7,6 +7,9 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryType
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemResponse
+import java.lang.ClassCastException
 import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.util.*
@@ -115,3 +118,12 @@ fun CategoryContextStatus.toDTO() = CategoryError(
 )
 
 internal fun String.toDTOString() = this.takeIf { it.isNotBlank() }
+
+inline fun <reified T> CategoryContext.getResult():T{
+    return when(T::class){
+        CategoryGetResponse::class -> resultCategory() as T
+        ItemResponse::class -> resultItem() as T
+        CategoryGetMapResponse::class -> resultMap() as T
+        else -> throw ClassCastException("Invalid type")
+    }
+}

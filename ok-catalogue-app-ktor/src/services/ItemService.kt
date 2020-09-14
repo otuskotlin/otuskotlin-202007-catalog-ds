@@ -5,8 +5,12 @@ import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryCreateQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.CategoryGetResponse
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemCreateQuery
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemResponse
+import ru.otus.otuskotlin.catalogue.transport.rest.getResult
 import ru.otus.otuskotlin.catalogue.transport.rest.resultCategory
 import ru.otus.otuskotlin.catalogue.transport.rest.resultItem
 import ru.otus.otuskotlin.catalogue.transport.rest.setQuery
@@ -20,7 +24,8 @@ class ItemService(): MainService() {
             setQuery(query)
             responseItem = requestItem
         }
-        resultItem()
+        getResult<ItemResponse>()
+        //resultItem()
     }
 
     suspend fun delItem(query: ItemDeleteQuery) = CategoryContext().run {
@@ -30,6 +35,7 @@ class ItemService(): MainService() {
                 items.removeIf { it.id == query.itemId }
             }.copy()
         }
-        resultCategory()
+        getResult<CategoryGetResponse>()
+        //resultCategory()
     }
 }

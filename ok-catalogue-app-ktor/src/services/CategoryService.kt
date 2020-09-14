@@ -6,6 +6,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
+import ru.otus.otuskotlin.catalogue.transport.rest.getResult
 import ru.otus.otuskotlin.catalogue.transport.rest.resultCategory
 import ru.otus.otuskotlin.catalogue.transport.rest.resultMap
 import ru.otus.otuskotlin.catalogue.transport.rest.setQuery
@@ -24,7 +25,8 @@ class CategoryService(): MainService() {
             setQuery(query)
             responseCategory = categoryModel.copy(id = query.categoryId?: throw Exception("No id."))
         }
-        resultCategory()
+        getResult<CategoryGetResponse>()
+        //resultCategory()
 
     }
 
@@ -33,7 +35,8 @@ class CategoryService(): MainService() {
             setQuery(query)
             responseCategory = requestCategory.copy(id = "asdf")
         }
-        resultCategory()
+        getResult<CategoryGetResponse>()
+        //resultCategory()
     }
 
     suspend fun delete(query: CategoryDeleteQuery) = CategoryContext().run {
@@ -43,7 +46,8 @@ class CategoryService(): MainService() {
                 children.removeIf { it.id == query.categoryId?: throw Exception("No id.") }
                 }.copy()
         }
-        resultCategory()
+        getResult<CategoryGetResponse>()
+        //resultCategory()
     }
 
     suspend fun rename(query: CategoryRenameQuery) = CategoryContext().run {
@@ -51,7 +55,8 @@ class CategoryService(): MainService() {
             setQuery(query)
             responseCategory = categoryModel.copy(label = query.modLabel?: throw Exception("No label."))
         }
-        resultCategory()
+        getResult<CategoryGetResponse>()
+        //resultCategory()
     }
 
     suspend fun map(query: CategoryGetMapQuery) = CategoryContext().run {
@@ -59,7 +64,8 @@ class CategoryService(): MainService() {
             setQuery(query)
             responseCategory = categoryModel.copy(id = query.id?: throw Exception("No id."))
         }
-        resultMap()
+        getResult<CategoryGetMapResponse>()
+        //resultMap()
     }
 
 
