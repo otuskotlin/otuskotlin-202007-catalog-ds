@@ -9,13 +9,11 @@ import io.ktor.http.content.*
 import io.ktor.features.*
 import io.ktor.serialization.json
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemCreateQuery
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
-import ru.otus.otuskotlin.catalogue.transport.common.models.items.NoteCreateQuery
-import ru.otus.otuskotlin.services.CategoryService
-import ru.otus.otuskotlin.services.ItemService
+import ru.otus.otuskotlin.catalogue.transport.rest.service.CategoryService
+import ru.otus.otuskotlin.catalogue.transport.rest.service.ItemService
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
