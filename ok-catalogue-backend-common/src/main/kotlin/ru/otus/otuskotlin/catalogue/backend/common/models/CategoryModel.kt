@@ -17,14 +17,11 @@ data class CategoryModel(
     val children:MutableSet<CategoryModel> = mutableSetOf(),
     val items:MutableSet<ItemModel> = mutableSetOf(),
 
-    val creationDate: LocalDate = LocalDate.EPOCH,
-    var modifyDate: LocalDate = LocalDate.EPOCH
+    val creationDate: LocalDate = LocalDate.MIN,
+    var modifyDate: LocalDate = creationDate
 ) {
 //    var children:List<CategoryModel> = emptyList()
 //        private set
-    init {
-        modifyDate = creationDate
-    }
 
     companion object{
         val NONE = CategoryModel()

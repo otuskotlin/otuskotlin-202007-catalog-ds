@@ -71,7 +71,7 @@ fun Application.module(testing: Boolean = false) {
             }
             post("/map") {
                 val query = call.receive<CategoryGetMapQuery>()
-                call.respond(service.map(query))
+                call.respond(service.getMap(query))
             }
             post ("/addItem" ){
                 val query = call.receive<ItemCreateQuery>()

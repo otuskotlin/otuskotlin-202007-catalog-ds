@@ -29,17 +29,6 @@ open class MainService() {
             creationDate = LocalDate.of(2010, 6, 13)
     )
 
-    protected suspend inline fun CategoryContext.tryCategoryQuery(errorMessage: String, action: () -> Unit){
-        status = try {
-            action()
-            CategoryContextStatus.SUCCESS
-        } catch (e: Exception){
-            log.error(errorMessage, e)
-            CategoryContextStatus.ERROR
-        }
-
-
-    }
 
     protected suspend inline fun <reified T: ResponseModel> CategoryContext.queryHandle(
             crossinline action: CategoryContext.()-> Unit) = run{

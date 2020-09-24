@@ -37,7 +37,7 @@ class CategoryService(): MainService() {
         responseCategory = categoryModel.copy(label = query.modLabel?: throw Exception("No label."))
     }
 
-    suspend fun map(query: CategoryGetMapQuery) = CategoryContext().queryHandle<CategoryGetMapResponse> {
+    suspend fun getMap(query: CategoryGetMapQuery) = CategoryContext().queryHandle<CategoryGetMapResponse> {
         setQuery(query)
         responseCategory = categoryModel.copy(id = query.id?: throw Exception("No id."))
     }
