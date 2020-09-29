@@ -2,6 +2,7 @@ package ru.otus.otuskotlin.catalogue.backend.common
 
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryInfoModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.common.models.IErrorModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 
 
@@ -14,5 +15,6 @@ data class CategoryContext(
         var responseMap: CategoryInfoModel = CategoryInfoModel.NONE,
         var requestItem: ItemModel = ItemModel.NONE,
         var responseItem: ItemModel = ItemModel.NONE,
+        var errors: MutableList<IErrorModel> = mutableListOf(),
         var status: CategoryContextStatus = CategoryContextStatus.NONE
 )

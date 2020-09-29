@@ -3,6 +3,7 @@ package ru.otus.otuskotlin.catalogue.transport.rest.service
 import org.slf4j.LoggerFactory
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
+import ru.otus.otuskotlin.catalogue.backend.common.errors.InternalServerError
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
@@ -37,7 +38,7 @@ open class MainService() {
                 }
                 catch (e: Exception){
                     log.error("setQuery error.", e)
-                    status = CategoryContextStatus.ERROR
+                    errors.add(InternalServerError.instance)
                 }
                 getResult<T>()
             }
