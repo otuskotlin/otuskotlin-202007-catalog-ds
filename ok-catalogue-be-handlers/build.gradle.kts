@@ -1,5 +1,3 @@
-val coroutinesVersion: String by project
-
 plugins {
     kotlin("jvm")
 }
@@ -14,6 +12,8 @@ repositories {
 
 
 dependencies {
+
+    val coroutinesVersion: String by project
 
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")

@@ -2,7 +2,7 @@ package ru.otus.otuskotlin.catalogue.transport.rest
 
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
 import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*

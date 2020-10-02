@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.backend.common.models
+package ru.otus.otuskotlin.catalogue.backend.common.models.categories
 
 /**
  *  Deprecated, include in CategoryModel

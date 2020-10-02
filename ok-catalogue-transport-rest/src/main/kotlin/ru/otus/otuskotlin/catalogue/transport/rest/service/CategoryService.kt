@@ -5,10 +5,7 @@ import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
 import ru.otus.otuskotlin.catalogue.transport.rest.setQuery
 import java.lang.Exception
 
-/**
- * @TODO: Replace class into rest module
- * @TODO: Refactor tryCategoryQuery with reified
- */
+
 class CategoryService(): MainService() {
 
 
