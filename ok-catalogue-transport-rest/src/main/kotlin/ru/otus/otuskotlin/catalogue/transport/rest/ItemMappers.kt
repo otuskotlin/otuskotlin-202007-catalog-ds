@@ -1,6 +1,9 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
+import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemCreateStubCases
+import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemDeleteStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.*
@@ -10,21 +13,27 @@ import java.lang.Exception
  *  File contained mappers for operations with items
  */
 
-fun CategoryContext.setQuery(delItem: ItemDeleteQuery) = this.apply {
+fun ItemContext.setQuery(delItem: ItemDeleteQuery) = this.apply {
     requestCategoryId = delItem.categoryId?:""
     requestItemId = delItem.itemId?:""
+    stubIDeleteCase = when(delItem.debug?.stub){
+        ItemDeleteQuery.StubCases.SUCCESS -> ItemDeleteStubCases.SUCCESS
+        else -> ItemDeleteStubCases.NONE
+    }
 }
 
-/**
- *  TODO: To make common for all ItemInfo children
- */
-fun CategoryContext.setQuery(addItem: ItemCreateQuery) = this.apply {
+
+fun ItemContext.setQuery(addItem: ItemCreateQuery) = this.apply {
     requestCategoryId = addItem.categoryId?:""
     requestItem = addItem.model()
+    stubICreateCase = when(addItem.debug?.stub){
+        ItemCreateQuery.StubCases.SUCCESS -> ItemCreateStubCases.SUCCESS
+        else -> ItemCreateStubCases.NONE
+    }
 }
 
 
-fun CategoryContext.resultItem() = ItemResponse(
+fun ItemContext.resultItem() = ItemResponse(
     data = responseItem.toDTO(),
     status = status.toDTO()
 )

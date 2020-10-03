@@ -1,6 +1,5 @@
-package ru.otus.otuskotlin.catalogue.transport.common.models.categories
+package ru.otus.otuskotlin.catalogue.transport.common.models.categories.responses
 
-import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
 

@@ -1,7 +1,8 @@
 package ru.otus.otuskotlin.catalogue.transport.rest.service
 
 import org.slf4j.LoggerFactory
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.BaseContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.errors.InternalServerError
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
@@ -30,8 +31,8 @@ open class MainService() {
     )
 
 
-    protected suspend inline fun <reified T: ResponseModel> CategoryContext.queryHandle(
-            crossinline action: CategoryContext.()-> Unit) = run{
+    protected suspend inline fun <reified T: ResponseModel> BaseContext.queryHandle(
+            crossinline action: BaseContext.()-> Unit) = run{
                 try{
                     action()
                 }

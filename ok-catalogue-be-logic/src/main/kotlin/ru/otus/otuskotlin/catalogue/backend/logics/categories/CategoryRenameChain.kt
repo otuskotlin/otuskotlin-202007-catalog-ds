@@ -1,8 +1,7 @@
 package ru.otus.otuskotlin.catalogue.backend.logics.categories
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
-import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryCreateStubCases
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.ContextStatus
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryRenameStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
@@ -16,7 +15,7 @@ class CategoryRenameChain {
     companion object{
         private val chain = corProc<CategoryContext>{
             // pipeline init
-            exec { status = CategoryContextStatus.RUNNING }
+            exec { status = ContextStatus.RUNNING }
 
             // stub handling
             processor {
@@ -43,7 +42,7 @@ class CategoryRenameChain {
                             ),
                             creationDate = LocalDate.of(2010, 6, 13)
                         )
-                        status = CategoryContextStatus.FINISHING
+                        status = ContextStatus.FINISHING
                     }
                 }
             }
@@ -52,7 +51,7 @@ class CategoryRenameChain {
 
             // answer preparing
             exec {
-                status = CategoryContextStatus.SUCCESS
+                status = ContextStatus.SUCCESS
             }
         }
     }

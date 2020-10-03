@@ -7,8 +7,10 @@ import io.ktor.server.testing.*
 import io.ktor.utils.io.charsets.Charsets
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.serializer
-import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
+import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries.*
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.responses.CategoryGetMapResponse
+import ru.otus.otuskotlin.catalogue.transport.common.models.categories.responses.CategoryGetResponse
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.*
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -29,7 +31,8 @@ class ApplicationTest {
         withTestApplication({ module(testing = true)}){
             handleRequest(HttpMethod.Post, uri = "/catalogue/get"){
                 val body = CategoryGetQuery(
-                        categoryId = "12345"
+                        categoryId = "12345",
+                        debug = CategoryGetQuery.Debug(CategoryGetQuery.StubCases.SUCCESS)
                 )
                 val  bodyString = Json.encodeToString(CategoryGetQuery.serializer(), body)
                 setBody(bodyString)
@@ -61,7 +64,8 @@ class ApplicationTest {
                 val body = CategoryCreateQuery(
                     parentId = "123",
                     type = "Note",
-                    label = "Recent"
+                    label = "Recent",
+                    debug = CategoryCreateQuery.Debug(stub = CategoryCreateQuery.StubCases.SUCCESS)
                 )
                 val  bodyString = Json.encodeToString(CategoryCreateQuery.serializer(), body)
                 setBody(bodyString)
@@ -81,7 +85,7 @@ class ApplicationTest {
 
                 val res = format.decodeFromString(CategoryGetResponse.serializer(), jsonString)
 
-                assertEquals("asdf", res.data?.id)
+                assertEquals("stub-create-category", res.data?.id)
             }
         }
     }
@@ -91,7 +95,8 @@ class ApplicationTest {
         withTestApplication({ module(testing = true) }) {
             handleRequest(HttpMethod.Post, uri = "/catalogue/delete") {
                 val body = CategoryDeleteQuery(
-                   categoryId = "12346"
+                   categoryId = "12346",
+                    debug = CategoryDeleteQuery.Debug(CategoryDeleteQuery.StubCases.SUCCESS)
                 )
                 val bodyString = Json.encodeToString(CategoryDeleteQuery.serializer(), body)
                 setBody(bodyString)
@@ -122,7 +127,8 @@ class ApplicationTest {
             handleRequest(HttpMethod.Post, uri = "/catalogue/rename") {
                 val body = CategoryRenameQuery(
                     categoryId = "12345",
-                    modLabel = "New label"
+                    modLabel = "New label",
+                    debug = CategoryRenameQuery.Debug(stub = CategoryRenameQuery.StubCases.SUCCESS)
                 )
                 val bodyString = Json.encodeToString(CategoryRenameQuery.serializer(), body)
                 setBody(bodyString)
@@ -152,7 +158,8 @@ class ApplicationTest {
         withTestApplication({ module(testing = true) }) {
             handleRequest(HttpMethod.Post, uri = "/catalogue/map") {
                 val body = CategoryGetMapQuery(
-                    id = "12345"
+                    id = "12345",
+                    debug = CategoryGetMapQuery.Debug(stub = CategoryGetMapQuery.StubCases.SUCCESS)
                 )
                 val bodyString = Json.encodeToString(CategoryGetMapQuery.serializer(), body)
                 setBody(bodyString)
@@ -211,7 +218,8 @@ class ApplicationTest {
                 val body = NoteCreateQuery(
                     categoryId = "12345",
                     id = "54321",
-                    preview = "Some text here..."
+                    preview = "Some text here...",
+                    debug = ItemCreateQuery.Debug(ItemCreateQuery.StubCases.SUCCESS)
                 )
                 val json = Json {
 
@@ -254,7 +262,8 @@ class ApplicationTest {
             handleRequest(HttpMethod.Post, uri = "/catalogue/delItem") {
                 val body = ItemDeleteQuery(
                     categoryId = "12345",
-                    itemId = "12"
+                    itemId = "12",
+                    debug = ItemDeleteQuery.Debug(ItemDeleteQuery.StubCases.SUCCESS)
                 )
 
                 val bodyString = Json.encodeToString(ItemDeleteQuery.serializer(), body)
@@ -267,7 +276,7 @@ class ApplicationTest {
                 println(jsonString)
 
                 // Need to use abstract class instead of sealed
-//                val format = Json {
+                val format = Json {
 //                    serializersModule = SerializersModule {
 //                        polymorphic(
 //                            baseClass = ItemInfo::class,
@@ -275,13 +284,14 @@ class ApplicationTest {
 //                            actualSerializer = NoteInfo.serializer()
 //                        )
 //                    }
-//                    prettyPrint = true
-//                }
+                    classDiscriminator = "#class"
+                    prettyPrint = true
+                }
                 //
 
-                val res = Json.decodeFromString(CategoryGetResponse.serializer(), jsonString)
+                val res = format.decodeFromString(ItemResponse.serializer(), jsonString)
 
-                assertEquals(true, res.data?.itemList?.isEmpty())
+                assertEquals(NoteInfo(), res.data)
             }
         }
     }

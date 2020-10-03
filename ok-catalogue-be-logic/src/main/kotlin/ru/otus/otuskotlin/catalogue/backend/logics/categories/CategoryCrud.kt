@@ -1,6 +1,6 @@
 package ru.otus.otuskotlin.catalogue.backend.logics.categories
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
 
 class CategoryCrud {
     private val getChain = CategoryGetChain()
@@ -15,4 +15,7 @@ class CategoryCrud {
     suspend fun delete(context: CategoryContext) = deleteChain.exec(context)
     suspend fun rename(context: CategoryContext) = renameChain.exec(context)
 
+    companion object{
+        val DEFAULT = CategoryCrud()
+    }
 }

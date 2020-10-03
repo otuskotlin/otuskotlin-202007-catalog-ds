@@ -1,7 +1,7 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo

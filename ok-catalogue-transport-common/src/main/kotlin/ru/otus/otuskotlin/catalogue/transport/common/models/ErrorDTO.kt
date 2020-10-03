@@ -12,6 +12,7 @@ data class ErrorDTO(
         enum class Level{
             NONE,
             WARNING,
-            ERROR
+            ERROR,
+            SUCCESS
         }
 }

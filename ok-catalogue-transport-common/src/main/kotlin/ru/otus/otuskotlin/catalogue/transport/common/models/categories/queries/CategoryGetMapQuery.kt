@@ -1,12 +1,11 @@
-package ru.otus.otuskotlin.catalogue.transport.common.models.items
+package ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ItemDeleteQuery(
-    var itemId: String? = null,
-    var categoryId: String? = null,
-    var  debug: Debug? = null
+data class CategoryGetMapQuery(
+    var id:String? = null,
+    var debug: Debug? = null
 ) {
     @Serializable
     data class Debug (

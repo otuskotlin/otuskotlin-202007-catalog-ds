@@ -1,7 +1,7 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.ContextStatus
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryType
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
@@ -29,7 +29,7 @@ internal class MainMappersKtTest{
     @Test
     fun `is contex status equal to dto error level`(){
         var context = CategoryContext()
-        context.status = CategoryContextStatus.WARNING
+        context.status = ContextStatus.WARNING
         var error = context.status.toDTO()
         assertEquals(ErrorDTO.Level.WARNING, error.level)
     }

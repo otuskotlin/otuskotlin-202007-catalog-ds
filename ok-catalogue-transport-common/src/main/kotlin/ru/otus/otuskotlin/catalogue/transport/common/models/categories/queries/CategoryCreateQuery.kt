@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.transport.common.models.categories
+package ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries
 
 import kotlinx.serialization.Serializable
 
@@ -10,7 +10,13 @@ data class CategoryCreateQuery(
         var debug: Debug? = null
 ) {
     @Serializable
-    class Debug {
+    data class Debug (
+        val stub: StubCases? = null
+    )
 
+    @Serializable
+    enum class StubCases{
+        NONE,
+        SUCCESS
     }
 }
