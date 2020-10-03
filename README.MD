@@ -22,7 +22,6 @@ API:
 
     3.3. Изменить сущность.
 
-
 MODULES:
 
 **ok-catalogue-backend-common** - Модели бэкенда.
@@ -32,3 +31,4 @@ MODULES:
 **ok-catalogue-transport-rest** - Маппер между  транспортом и внутренними моделями 
 
 **ok-catalogue-app-ktor** - Модуль KTOR-фреймворка, REST-сервис
+
