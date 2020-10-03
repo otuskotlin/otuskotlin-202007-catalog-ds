@@ -2,18 +2,17 @@ package ru.otus.otuskotlin.catalogue.transport.rest
 
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryInfoModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryType
-import ru.otus.otuskotlin.catalogue.backend.common.models.FullCategoryModel
+import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
+import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.*
-import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
-import java.lang.IllegalArgumentException
+import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemResponse
+import java.lang.ClassCastException
 import java.time.LocalDate
 import java.util.*
 
 fun CategoryContext.setQuery(create: CategoryCreateQuery) = this.apply {
-    reguestCategory = create.model()
+    requestCategory = create.model()
 }
 
 fun CategoryContext.setQuery(delete: CategoryDeleteQuery) = this.apply {
@@ -39,7 +38,7 @@ fun CategoryContext.resultCategory() = CategoryGetResponse(
 )
 
 fun CategoryContext.resultMap() = CategoryGetMapResponse(
-        data = responseMap.toTreeDTO(),
+        data = responseCategory.toTreeDTO(),
         status = status.toDTO()
 )
 
@@ -49,36 +48,42 @@ fun CategoryCreateQuery.model() = CategoryModel(
     parentId = parentId?:"",
     creationDate = LocalDate.now(),
     //type = try{CategoryType.valueOf(type?:"".toLowerCase())} catch (e:IllegalArgumentException){CategoryType.NONE}
-    type = CategoryType.NONE.findByArg((type?:"").toLowerCase())
+    //type = CategoryType.NONE.findByArg((type?:"").toLowerCase())
+    type = type?:"".toLowerCase()
 )
 
-fun FullCategoryModel.toDTO() = CategoryDTO(
+fun CategoryModel.toDTO() = CategoryDTO(
         id = id.toDTOString(),
-        type = type.toString().toDTOString(),
+        type = type.toDTOString(),
         label = label.toDTOString(),
-        parentList = parents.map { it.toDTO() }.toMutableList(),
-        childList = children.map { it.toDTO() }.toMutableList(),
+        parentList = parents.map { it.toInfoDTO() }.toMutableList(),
+        childList = children.map { it.toInfoDTO() }.toMutableList(),
         itemList = items.map { it.toDTO() }.toMutableList(),
         creationDate = creationDate.toString(),
         modifyDate = modifyDate.toString()
 )
 
-fun CategoryInfoModel.toDTO() = CategoryInfo(
+fun CategoryModel.toInfoDTO() = CategoryInfo(
         id = id.toDTOString(),
         label = label.toDTOString()
 )
 
+//fun CategoryInfoModel.toDTO() = CategoryInfo(
+//        id = id.toDTOString(),
+//        label = label.toDTOString()
+//)
+
 /**
  * Recursive fun for return catalogue tree
  */
-fun CategoryInfoModel.toTreeDTO():CategoryMapDTO {
-    if(tree.isEmpty())
+fun CategoryModel.toTreeDTO():CategoryMapDTO {
+    if(children.isEmpty())
         return  CategoryMapDTO(
-            id = id.toDTOString(),
-            label = label.toDTOString()
-    )
-    var branch: MutableList<CategoryMapDTO> = mutableListOf()
-    for(node in tree){
+                id = id.toDTOString(),
+                label = label.toDTOString()
+        )
+    val branch: MutableList<CategoryMapDTO> = mutableListOf()
+    for(node in children){
         branch.add(node.toTreeDTO())
     }
     return CategoryMapDTO(
@@ -88,8 +93,34 @@ fun CategoryInfoModel.toTreeDTO():CategoryMapDTO {
     )
 }
 
-fun CategoryContextStatus.toDTO() = CategoryError(
-        level = CategoryError.Level.valueOf(this.toString())
+//fun CategoryInfoModel.toTreeDTO():CategoryMapDTO {
+//    if(tree.isEmpty())
+//        return  CategoryMapDTO(
+//            id = id.toDTOString(),
+//            label = label.toDTOString()
+//    )
+//    val branch: MutableList<CategoryMapDTO> = mutableListOf()
+//    for(node in tree){
+//        branch.add(node.toTreeDTO())
+//    }
+//    return CategoryMapDTO(
+//            id = id.toDTOString(),
+//            label = label.toDTOString(),
+//            children = branch
+//    )
+//}
+
+fun CategoryContextStatus.toDTO() = ErrorDTO(
+        level = ErrorDTO.Level.valueOf(this.toString())
 )
 
 internal fun String.toDTOString() = this.takeIf { it.isNotBlank() }
+
+inline fun <reified T: ResponseModel> CategoryContext.getResult():T{
+    return when(T::class){
+        CategoryGetResponse::class -> resultCategory() as T
+        ItemResponse::class -> resultItem() as T
+        CategoryGetMapResponse::class -> resultMap() as T
+        else -> throw ClassCastException("Invalid type")
+    }
+}
