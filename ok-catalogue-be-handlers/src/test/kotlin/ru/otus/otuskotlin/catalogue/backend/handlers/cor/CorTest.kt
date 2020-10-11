@@ -1,6 +1,6 @@
+package ru.otus.otuskotlin.catalogue.backend.handlers.cor
+
 import kotlinx.coroutines.runBlocking
-import ru.otus.otuskotlin.catalogue.backend.handlers.cor.IExec
-import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

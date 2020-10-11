@@ -28,15 +28,15 @@ internal class ItemMappersKtTest{
 
     @Test
     fun itemToDTOTest(){
-        var item = NoteModel()
-        var dto = item.toDTO()
+        val item = NoteModel()
+        val dto = item.toDTO()
         assertTrue { dto is NoteInfo }
         assertTrue { dto is ItemInfo }
     }
 
     @Test
     fun runExceptionUndefinedType(){
-        var item = AnotherItem()
+        val item = AnotherItem()
         var result:Boolean = true
         try{
             item.toDTO()

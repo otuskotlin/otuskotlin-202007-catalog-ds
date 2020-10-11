@@ -30,6 +30,13 @@ class CategoryCreateChain {
                 }
             }
 
+            processor {
+                isMatchable { status != ContextStatus.FINISHING }
+                exec {
+
+                }
+            }
+
             //TODO: add validation and db logic
 
             // answer preparing
