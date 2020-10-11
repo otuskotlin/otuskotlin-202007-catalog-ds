@@ -4,9 +4,11 @@ import ru.otus.otuskotlin.catalogue.backend.common.contexts.BaseContext
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.ContextStatus
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
+import ru.otus.otuskotlin.catalogue.backend.common.models.IErrorModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
 import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
+import ru.otus.otuskotlin.catalogue.transport.common.models.StatusDTO
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.responses.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemResponse
@@ -57,12 +59,14 @@ fun CategoryContext.setQuery(getMap: CategoryGetMapQuery) = this.apply {
 
 fun CategoryContext.resultCategory() = CategoryGetResponse(
     data = responseCategory.toDTO(),
-    status = status.toDTO()
+    status = this.toStatusDTO(),
+    errors = errors.map { it.toErrorDTO() }
 )
 
 fun CategoryContext.resultMap() = CategoryGetMapResponse(
         data = responseCategory.toTreeDTO(),
-        status = status.toDTO()
+        status = this.toStatusDTO(),
+        errors = errors.map { it.toErrorDTO() }
 )
 
 fun CategoryCreateQuery.model() = CategoryModel(
@@ -133,9 +137,25 @@ fun CategoryModel.toTreeDTO(): CategoryMapDTO {
 //    )
 //}
 
-fun ContextStatus.toDTO() = ErrorDTO(
-        level = ErrorDTO.Level.valueOf(this.toString())
+fun BaseContext.toStatusDTO() = when{
+ status.isError || errors.any { it.level.isError } -> StatusDTO.ERROR
+    errors.any { it.level.isWarning } -> StatusDTO.WARNING
+    else -> StatusDTO.SUCCESS
+}
+
+fun IErrorModel.toErrorDTO() = ErrorDTO(
+    code = code.toDTOString(),
+    group = group.takeIf { it != IErrorModel.Groups.NONE }.toString(),
+    field = field.toDTOString(),
+    level = level.toDTO(),
+    message = message.toDTOString()
 )
+
+fun IErrorModel.Levels.toDTO() = when{
+    isError -> ErrorDTO.Level.ERROR
+    isWarning -> ErrorDTO.Level.WARNING
+    else -> ErrorDTO.Level.SUCCESS
+}
 
 internal fun String.toDTOString() = this.takeIf { it.isNotBlank() }
 

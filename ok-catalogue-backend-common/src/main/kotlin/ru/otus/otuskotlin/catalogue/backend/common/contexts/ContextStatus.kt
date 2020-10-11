@@ -4,7 +4,10 @@ enum class ContextStatus {
     NONE,
     RUNNING,
     SUCCESS,
-    WARNING,
+    FAILING,
     ERROR,
-    FINISHING
+    FINISHING;
+
+    val isError
+        get() = this in arrayOf(ERROR, FAILING)
 }

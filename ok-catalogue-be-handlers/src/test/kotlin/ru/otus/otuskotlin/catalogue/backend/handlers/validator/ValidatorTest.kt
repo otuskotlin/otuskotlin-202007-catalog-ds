@@ -24,6 +24,8 @@ internal class ValidatorTest {
 
         runBlocking {
             data.errors addRange validator<SomeData, SomeError> {
+                stopOnError = true
+
                 validate {
                     if (id.isBlank())
                         return@validate SomeError(message = "id is blank")
@@ -42,7 +44,7 @@ internal class ValidatorTest {
         data.errors.forEach {
             println("error: ${it.code} ${it.message}")
         }
-        assertEquals(2, data.errors.size)
+        assertEquals(1, data.errors.size)
 
     }
 }

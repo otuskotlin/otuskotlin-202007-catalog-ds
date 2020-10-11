@@ -6,6 +6,8 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryGet
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
+import ru.otus.otuskotlin.catalogue.backend.handlers.validator.addRange
+import ru.otus.otuskotlin.catalogue.backend.logics.validators.fields.IdValidator
 import java.time.LocalDate
 
 class CategoryGetChain {
@@ -46,6 +48,14 @@ class CategoryGetChain {
             }
 
             //TODO: add validation and db logic
+            processor {
+                isMatchable { status != ContextStatus.FINISHING }
+                exec {
+                    errors addRange IdValidator().validate(requestCategoryId)
+                    if (errors.any { it.level.isError })
+                        status = ContextStatus.FAILING
+                }
+            }
 
             // answer preparing
             exec {

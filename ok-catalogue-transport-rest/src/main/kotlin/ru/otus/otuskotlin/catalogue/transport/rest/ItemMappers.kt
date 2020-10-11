@@ -1,6 +1,5 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
-import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemCreateStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemDeleteStubCases
@@ -35,7 +34,8 @@ fun ItemContext.setQuery(addItem: ItemCreateQuery) = this.apply {
 
 fun ItemContext.resultItem() = ItemResponse(
     data = responseItem.toDTO(),
-    status = status.toDTO()
+    status = this.toStatusDTO(),
+    errors = errors.map { it.toErrorDTO() }
 )
 
 ///**
