@@ -9,6 +9,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
 import ru.otus.otuskotlin.catalogue.transport.rest.getResult
 import java.lang.Exception
+import java.lang.NumberFormatException
 import java.time.LocalDate
 
 open class MainService() {
@@ -30,6 +31,13 @@ open class MainService() {
             creationDate = LocalDate.of(2010, 6, 13)
     )
 
+    suspend fun errorHandler(error: Throwable):Int {
+        log.error("Input query error.", error)
+        return when(error::class){
+            StringIndexOutOfBoundsException::class -> 502
+            else -> 400
+        }
+    }
 
     protected suspend inline fun <reified T: ResponseModel> BaseContext.queryHandle(
             crossinline action: BaseContext.()-> Unit) = run{

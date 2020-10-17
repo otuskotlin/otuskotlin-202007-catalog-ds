@@ -49,6 +49,14 @@ fun Application.module(testing: Boolean = false) {
         )
     }
 
+    install(StatusPages){
+        exception<NumberFormatException> {cause ->
+            call.respond(HttpStatusCode.fromValue(service.errorHandler(cause)))
+        }
+        exception<StringIndexOutOfBoundsException> { cause ->
+            call.respond(HttpStatusCode.fromValue(service.errorHandler(cause))) }
+    }
+
     routing {
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
@@ -56,46 +64,67 @@ fun Application.module(testing: Boolean = false) {
 
         route("/catalogue") {
             post("/get") {
-                val query = call.receiveOrNull<CategoryGetQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<CategoryGetQuery>()
                     call.respond(service.get(query))
-                } ?: call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/create") {
-                val query = call.receiveOrNull<CategoryCreateQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<CategoryCreateQuery>()
                     call.respond(service.create(query))
-                } ?: call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/delete") {
-                val query = call.receiveOrNull<CategoryDeleteQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<CategoryDeleteQuery>()
                     call.respond(service.delete(query))
-                } ?: call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/rename") {
-                val query = call.receiveOrNull<CategoryRenameQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<CategoryRenameQuery>()
                     call.respond(service.rename(query))
-                } ?: call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/map") {
-                val query = call.receiveOrNull<CategoryGetMapQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<CategoryGetMapQuery>()
                     call.respond(service.getMap(query))
-                }?:call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/addItem") {
-                val query = call.receiveOrNull<ItemCreateQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<ItemCreateQuery>()
                     call.respond(itemService.addItem(query))
-                }?:call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
             post("/delItem") {
-                val query = call.receiveOrNull<ItemDeleteQuery>()
-                query?.let {
+                try {
+                    val query = call.receive<ItemDeleteQuery>()
                     call.respond(itemService.delItem(query))
-                }?:call.respond(HttpStatusCode.BadGateway)
+                }
+                catch (e: Exception){
+                    call.respond(HttpStatusCode.fromValue(service.errorHandler(e)))
+                }
             }
 
         }
@@ -106,4 +135,5 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 }
+
 

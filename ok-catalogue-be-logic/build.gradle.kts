@@ -19,5 +19,6 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     implementation(project(":ok-catalogue-backend-common"))
-    implementation(project(":ok-catalogue-be-handlers"))
+    implementation(project(":ok-catalogue-be-common-cor"))
+    implementation(project(":ok-catalogue-be-common-validators"))
 }

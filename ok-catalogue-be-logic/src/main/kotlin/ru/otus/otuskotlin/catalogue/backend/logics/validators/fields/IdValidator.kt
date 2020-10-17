@@ -2,7 +2,7 @@ package ru.otus.otuskotlin.catalogue.backend.logics.validators.fields
 
 import ru.otus.otuskotlin.catalogue.backend.common.errors.ValidationError
 import ru.otus.otuskotlin.catalogue.backend.common.models.IErrorModel
-import ru.otus.otuskotlin.catalogue.backend.handlers.validator.validator
+import ru.otus.otuskotlin.catalogue.backend.common.validators.validator
 import java.util.*
 
 class IdValidator {

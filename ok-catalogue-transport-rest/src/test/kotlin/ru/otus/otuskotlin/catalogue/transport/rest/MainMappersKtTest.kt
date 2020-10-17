@@ -26,13 +26,6 @@ internal class MainMappersKtTest{
 //        assertEquals(context.setQuery(create).reguestCategory.type, CategoryType.NOTES)
 //    }
 
-    @Test
-    fun `is contex status equal to dto error level`(){
-        var context = CategoryContext()
-        context.status = ContextStatus.WARNING
-        var error = context.status.toDTO()
-        assertEquals(ErrorDTO.Level.WARNING, error.level)
-    }
 
     @Test
     fun `is note asserts item to generic`(){
