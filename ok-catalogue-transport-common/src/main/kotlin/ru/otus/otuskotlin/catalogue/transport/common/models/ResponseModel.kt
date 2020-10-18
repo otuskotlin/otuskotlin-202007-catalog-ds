@@ -5,5 +5,6 @@ import kotlinx.serialization.Transient
 
 @Serializable
 abstract class ResponseModel(
-        @Transient open var status: ErrorDTO? = null
+        @Transient open var status: StatusDTO? = null,
+        @Transient open var errors: List<ErrorDTO>? = null
 )

@@ -1,7 +1,7 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
@@ -20,7 +20,7 @@ internal class ItemMappersKtTest{
         val query = NoteCreateQuery(
             header = "asd"
         )
-        val context = CategoryContext()
+        val context = ItemContext()
         context.setQuery(query)
         assertEquals("", context.requestCategoryId)
         assertEquals("asd", context.requestItem.header)
@@ -28,15 +28,15 @@ internal class ItemMappersKtTest{
 
     @Test
     fun itemToDTOTest(){
-        var item = NoteModel()
-        var dto = item.toDTO()
+        val item = NoteModel()
+        val dto = item.toDTO()
         assertTrue { dto is NoteInfo }
         assertTrue { dto is ItemInfo }
     }
 
     @Test
     fun runExceptionUndefinedType(){
-        var item = AnotherItem()
+        val item = AnotherItem()
         var result:Boolean = true
         try{
             item.toDTO()

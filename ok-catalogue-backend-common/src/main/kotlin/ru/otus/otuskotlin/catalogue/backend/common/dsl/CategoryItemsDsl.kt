@@ -1,6 +1,5 @@
 package ru.otus.otuskotlin.catalogue.backend.common.dsl
 
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 
 @CategoryDslMarker

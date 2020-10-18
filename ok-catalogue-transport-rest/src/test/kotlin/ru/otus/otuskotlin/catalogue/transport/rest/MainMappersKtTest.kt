@@ -1,9 +1,9 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContext
-import ru.otus.otuskotlin.catalogue.backend.common.CategoryContextStatus
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryModel
-import ru.otus.otuskotlin.catalogue.backend.common.models.CategoryType
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.ContextStatus
+import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryType
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemInfo
@@ -26,13 +26,6 @@ internal class MainMappersKtTest{
 //        assertEquals(context.setQuery(create).reguestCategory.type, CategoryType.NOTES)
 //    }
 
-    @Test
-    fun `is contex status equal to dto error level`(){
-        var context = CategoryContext()
-        context.status = CategoryContextStatus.WARNING
-        var error = context.status.toDTO()
-        assertEquals(ErrorDTO.Level.WARNING, error.level)
-    }
 
     @Test
     fun `is note asserts item to generic`(){

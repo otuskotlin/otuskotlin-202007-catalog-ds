@@ -11,8 +11,20 @@ import kotlinx.serialization.Transient
 
 @Serializable
 sealed class ItemCreateQuery(
-   @Transient open var categoryId: String? = null
-)
+   @Transient open var categoryId: String? = null,
+   @Transient open var debug: Debug? = null
+) {
+    @Serializable
+    data class Debug (
+            val stub: StubCases? = null
+    )
+
+    @Serializable
+    enum class StubCases{
+        NONE,
+        SUCCESS
+    }
+}
 
 @Serializable
 @SerialName("note")
@@ -22,12 +34,7 @@ data class NoteCreateQuery(
     var header: String? = null,
     var description: String? = null,
     var preview: String? = null,
-    var debug: Debug? = null
+    override var debug: Debug? = null
 ): ItemCreateQuery(
     categoryId = categoryId
 )
-{
-    @Serializable
-    class Debug
-
-    }

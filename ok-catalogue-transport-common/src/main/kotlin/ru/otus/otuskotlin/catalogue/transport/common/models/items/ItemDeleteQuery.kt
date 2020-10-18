@@ -9,5 +9,13 @@ data class ItemDeleteQuery(
     var  debug: Debug? = null
 ) {
     @Serializable
-    class Debug
+    data class Debug (
+            val stub: StubCases? = null
+    )
+
+    @Serializable
+    enum class StubCases{
+        NONE,
+        SUCCESS
+    }
 }
