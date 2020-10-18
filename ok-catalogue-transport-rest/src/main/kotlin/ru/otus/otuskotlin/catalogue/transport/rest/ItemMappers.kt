@@ -52,6 +52,7 @@ fun ItemCreateQuery.model(): ItemModel{
     when(this){
         is NoteCreateQuery -> return NoteModel(
             id = id?:"",
+            categoryId = categoryId?:"",
             header = header?:"",
             description = description?:"",
             preview = preview?:""
@@ -64,6 +65,7 @@ fun ItemModel.toDTO(): ItemInfo{
     when(this){
         is NoteModel -> return NoteInfo(
                 id = id.toDTOString(),
+                categoryId = categoryId.toDTOString(),
                 header = header.toDTOString(),
                 description = description.toDTOString(),
                 preview = preview.toDTOString()

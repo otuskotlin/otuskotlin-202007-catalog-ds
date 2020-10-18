@@ -28,7 +28,7 @@ class CategoryRenameChain {
 
                     exec {
                         responseCategory = CategoryModel(
-                            id = "12345",
+                            id = requestCategoryId,
                             label = requestLabel,
                             type = "notes",
                             children = mutableSetOf(CategoryModel(id = "12346", label = "Subdir")),
