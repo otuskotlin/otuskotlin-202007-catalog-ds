@@ -25,10 +25,18 @@ API:
 
 MODULES:
 
-**ok-catalogue-backend-common** - Модели бэкенда.
+**ok-catalogue-backend-common** - Основной модуль бэкенда.
 
 **ok-catalogue-transport-common** - Общие модели и валидаторы транспортного уровня
 
 **ok-catalogue-transport-rest** - Маппер между  транспортом и внутренними моделями 
 
 **ok-catalogue-app-ktor** - Модуль KTOR-фреймворка, REST-сервис
+
+**ok-catalogue-be-logic** - Модуль логики
+
+**ok-catalogue-common-cor** - Библиотека Chain of responsibility
+
+**ok-catalogue-common-validators** - Библиотека валидаторов
+
+**ok-catalogue-be-repo-inmemory** - Модуль репозитория cache2k

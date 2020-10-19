@@ -12,6 +12,10 @@ repositories {
 val coroutinesVersion: String by project
 val cache2kVersion: String by project
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+}
+
 dependencies {
     implementation(kotlin("stdlib"))
 

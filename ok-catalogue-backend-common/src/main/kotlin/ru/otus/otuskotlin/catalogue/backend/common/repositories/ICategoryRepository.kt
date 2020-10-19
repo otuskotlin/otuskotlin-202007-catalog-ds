@@ -5,7 +5,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryMod
 interface ICategoryRepository {
 
     suspend fun get(id: String): CategoryModel
-    suspend fun getMap(id: String): Collection<CategoryModel>
+    suspend fun getMap(id: String): CategoryModel
     suspend fun create(category: CategoryModel): CategoryModel
     suspend fun rename(id: String, label: String): CategoryModel
     suspend fun delete(id: String): CategoryModel
@@ -16,7 +16,7 @@ interface ICategoryRepository {
                 TODO("Not yet implemented")
             }
 
-            override suspend fun getMap(id: String): Collection<CategoryModel> {
+            override suspend fun getMap(id: String): CategoryModel {
                 TODO("Not yet implemented")
             }
 

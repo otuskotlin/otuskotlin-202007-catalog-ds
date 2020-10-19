@@ -2,15 +2,18 @@ package ru.otus.otuskotlin.catalogue.backend.repository.inmemory
 
 import org.cache2k.Cache
 import org.cache2k.Cache2kBuilder
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoNotFoundException
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoWrongIdException
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
 class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     ttl: Duration,
-    initObjects: Collection<CategoryModel>
+    initObjects: Collection<CategoryModel> = emptyList()
 ): ICategoryRepository {
     @OptIn(ExperimentalTime::class)
     private var cache: Cache<String, CategoryInMemoryDTO> = object : Cache2kBuilder<String, CategoryInMemoryDTO>() {}
@@ -24,22 +27,53 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         }
 
     override suspend fun get(id: String): CategoryModel {
-        TODO("Not yet implemented")
+        val  model = getWithChildren(id)
+        var parentId:String? = model.parentId
+        while (!parentId.isNullOrBlank()){
+            val parent = cache.get(parentId)?.toModel()?: throw CategoryRepoNotFoundException(parentId)
+            model.parents.add(parent)
+            parentId = parent.parentId
+        }
+
+        return model
     }
 
-    override suspend fun getMap(id: String): Collection<CategoryModel> {
-        TODO("Not yet implemented")
+    override suspend fun getMap(id: String): CategoryModel {
+        val model = getWithChildren(id)
+        model.children.forEach {
+            it.children.add(getMap(it.id))
+        }
+        return model
     }
 
     override suspend fun create(category: CategoryModel): CategoryModel {
-        TODO("Not yet implemented")
+        val dto = CategoryInMemoryDTO.of(category, UUID.randomUUID().toString())
+        return save(dto).toModel()
     }
 
     override suspend fun rename(id: String, label: String): CategoryModel {
-        TODO("Not yet implemented")
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        val dto = cache.get(id)?:throw CategoryRepoNotFoundException(id)
+        return save(dto.copy(label = label)).toModel()
     }
 
     override suspend fun delete(id: String): CategoryModel {
-        TODO("Not yet implemented")
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        return cache.peekAndRemove(id)?.toModel()?: throw CategoryRepoNotFoundException(id)
+    }
+
+    private suspend fun save(dto: CategoryInMemoryDTO): CategoryInMemoryDTO {
+        cache.put(dto.id, dto)
+        return cache.get(dto.id)
+    }
+
+    private suspend fun getWithChildren(id: String): CategoryModel{
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        val model = cache.get(id)?.toModel()?: throw CategoryRepoNotFoundException(id)
+        model.children.addAll(cache.entries()
+                ?.filter { it.value.parentId == id }
+                ?.map { it.value.toModel() }?: emptyList())
+
+        return model
     }
 }
