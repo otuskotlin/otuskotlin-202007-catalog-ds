@@ -18,7 +18,7 @@ data class CategoryInMemoryDTO (
         label = label?:"",
         parentId = parentId?:"",
         creationDate = creationDate?.let { LocalDate.parse(it) }?: LocalDate.MIN,
-        modifyDate = modifyDate?.let { LocalDate.parse(it) }?: LocalDate.MIN
+        modifyDate = modifyDate?.let { LocalDate.parse(it) }?: creationDate?.let { LocalDate.parse(it) }?: LocalDate.MIN
     )
 
 

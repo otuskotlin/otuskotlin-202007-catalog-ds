@@ -49,6 +49,7 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     override suspend fun create(category: CategoryModel): CategoryModel {
         val dto = CategoryInMemoryDTO.of(category, UUID.randomUUID().toString())
         return save(dto).toModel()
+        //TODO: Check for parent is exist
     }
 
     override suspend fun rename(id: String, label: String): CategoryModel {
@@ -60,6 +61,7 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     override suspend fun delete(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return cache.peekAndRemove(id)?.toModel()?: throw CategoryRepoNotFoundException(id)
+        //TODO: Need deleting subcategories
     }
 
     private suspend fun save(dto: CategoryInMemoryDTO): CategoryInMemoryDTO {
