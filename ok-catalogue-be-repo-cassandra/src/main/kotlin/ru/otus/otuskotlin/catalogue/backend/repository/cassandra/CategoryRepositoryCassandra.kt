@@ -12,8 +12,10 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryMod
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.CATEGORY_TABLE_NAME
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_CHILDREN_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_CREATION_DATE
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_ID
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_ITEMS_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_LABEL
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_MODIFY_DATE
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_PARENT_ID
@@ -70,29 +72,32 @@ class CategoryRepositoryCassandra (
 
     override suspend fun get(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
-        var model: CategoryModel? = null
-        val children: MutableSet<CategoryModel> = mutableSetOf()
-        val parents: MutableList<CategoryModel> = mutableListOf()
-        val items: MutableSet<ItemModel> = mutableSetOf()
         return withTimeout(timeout.toMillis()){
-            val modelJob = CoroutineScope(coroutineContext).launch {
-                model = mapper.getAsync(id)?.await()?.toModel()?: throw CategoryRepoNotFoundException(id)
-
-                //TODO: Get parents by async
-                model?.parents?.addAll(parents)
+            val modelCassandra = mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)
+            val model = modelCassandra.toModel()
+            val parentsJob = CoroutineScope(coroutineContext).launch {
+                var parentId = model.parentId
+                while (!parentId.isBlank()){
+                    val parent = mapper.getAsync(parentId)?.await()?.toModel()?: throw CategoryRepoNotFoundException(parentId)
+                    model.parents.add(parent)
+                    parentId = parent.parentId
+                }
             }
             val childrenJob = CoroutineScope(coroutineContext).launch {
-                //TODO: Get children by async
-                modelJob.join()
-                model?.children?.addAll(children)
+                modelCassandra.children?.forEach {
+                    CoroutineScope(coroutineContext).launch {
+                        val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
+                        model.children.add(child)
+                    }
+                }
             }
             val itemsJob = CoroutineScope(coroutineContext).launch {
                 //TODO: Get items by async
-                modelJob.join()
-                model?.items?.addAll(items)
             }
-
-            model?: throw CategoryRepoNotFoundException(id)
+            parentsJob.join()
+            childrenJob.join()
+            itemsJob.join()
+            model
         }
 
     }
@@ -143,11 +148,14 @@ class CategoryRepositoryCassandra (
                $COLUMN_TYPE text,
                $COLUMN_LABEL text,
                $COLUMN_PARENT_ID text,
+               $COLUMN_CHILDREN_ID list <text>,
+               $COLUMN_ITEMS_ID list <text>,
                $COLUMN_CREATION_DATE date,
                $COLUMN_MODIFY_DATE date,
 
                PRIMARY KEY ($COLUMN_ID)
             )
        """.trimIndent()).await()
+
     }
 }

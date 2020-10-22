@@ -21,6 +21,12 @@ data class CategoryCassandraDTO (
     @Column(name = "COLUMN_PARENT_ID")
     val parentId: String? = null,
 
+    @Column(name = "COLUMN_CHILDREN_ID")
+    val children: Collection<String>? = null,
+
+    @Column(name = "COLUMN_ITEMS_ID")
+    val items: Collection<String>? = null,
+
     @Column(name = "COLUMN_CREATION_DATE")
     val creationDate: LocalDate? = null,
 
@@ -41,7 +47,9 @@ data class CategoryCassandraDTO (
         const val COLUMN_ID = "id"
         const val COLUMN_TYPE = "type"
         const val COLUMN_LABEL = "label"
-        const val COLUMN_PARENT_ID = "prent_id"
+        const val COLUMN_PARENT_ID = "parent_id"
+        const val COLUMN_CHILDREN_ID = "children_id"
+        const val COLUMN_ITEMS_ID = "items_id"
         const val COLUMN_CREATION_DATE = "creation_date"
         const val COLUMN_MODIFY_DATE = "modify_date"
 
@@ -52,6 +60,8 @@ data class CategoryCassandraDTO (
                 type = model.type.takeIf { it.isNotBlank() },
                 label = model.label.takeIf { it.isNotBlank() },
                 parentId = model.parentId.takeIf { it.isNotBlank() },
+                children = model.children.map { it.id }.takeIf { it.isNotEmpty() },
+                items = model.items.map { it.id }.takeIf { it.isNotEmpty() },
                 creationDate = model.creationDate.takeIf { it != LocalDate.MIN },
                 modifyDate = model.modifyDate.takeIf { it != LocalDate.MIN }
         )
