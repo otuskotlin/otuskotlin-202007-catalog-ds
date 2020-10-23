@@ -24,6 +24,7 @@ import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassand
 import java.io.Closeable
 import java.net.InetAddress
 import java.time.Duration
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class CategoryRepositoryCassandra (
@@ -84,7 +85,7 @@ class CategoryRepositoryCassandra (
                 }
             }
             val childrenJob = CoroutineScope(coroutineContext).launch {
-                modelCassandra.children?.forEach {
+                modelCassandra.children.forEach {
                     CoroutineScope(coroutineContext).launch {
                         val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
                         model.children.add(child)
@@ -107,15 +108,31 @@ class CategoryRepositoryCassandra (
     }
 
     override suspend fun create(category: CategoryModel): CategoryModel {
-        TODO("Not yet implemented")
+        val id = UUID.randomUUID().toString()
+        if (category.parentId.isNotBlank()){
+            val parent = withTimeout(timeout.toMillis()){
+                mapper.getAsync(category.parentId)?.await()?: throw CategoryRepoNotFoundException(category.parentId)}
+            parent.children.add(id)
+            save(parent)
+        }
+        val dto = CategoryCassandraDTO.of(category, id)
+        return save(dto).toModel()
     }
 
     override suspend fun rename(id: String, label: String): CategoryModel {
-        TODO("Not yet implemented")
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        val dto = withTimeout(timeout.toMillis()){
+            mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)}
+        return save(dto.copy(label = label)).toModel()
     }
 
     override suspend fun delete(id: String): CategoryModel {
         TODO("Not yet implemented")
+    }
+
+    private suspend fun save(dto: CategoryCassandraDTO): CategoryCassandraDTO{
+        withTimeout(timeout.toMillis()){ mapper.saveAsync(dto).await()}
+        return withTimeout(timeout.toMillis()){ mapper.getAsync(dto.id).await()}
     }
 
     override val coroutineContext: CoroutineContext

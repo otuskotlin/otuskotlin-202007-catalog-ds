@@ -22,10 +22,10 @@ data class CategoryCassandraDTO (
     val parentId: String? = null,
 
     @Column(name = "COLUMN_CHILDREN_ID")
-    val children: Collection<String>? = null,
+    val children: MutableCollection<String> = mutableSetOf(),
 
     @Column(name = "COLUMN_ITEMS_ID")
-    val items: Collection<String>? = null,
+    val items: MutableCollection<String> = mutableSetOf(),
 
     @Column(name = "COLUMN_CREATION_DATE")
     val creationDate: LocalDate? = null,
@@ -60,8 +60,8 @@ data class CategoryCassandraDTO (
                 type = model.type.takeIf { it.isNotBlank() },
                 label = model.label.takeIf { it.isNotBlank() },
                 parentId = model.parentId.takeIf { it.isNotBlank() },
-                children = model.children.map { it.id }.takeIf { it.isNotEmpty() },
-                items = model.items.map { it.id }.takeIf { it.isNotEmpty() },
+                children = model.children.map { it.id }.toMutableSet(),
+                items = model.items.map { it.id }.toMutableSet(),
                 creationDate = model.creationDate.takeIf { it != LocalDate.MIN },
                 modifyDate = model.modifyDate.takeIf { it != LocalDate.MIN }
         )
