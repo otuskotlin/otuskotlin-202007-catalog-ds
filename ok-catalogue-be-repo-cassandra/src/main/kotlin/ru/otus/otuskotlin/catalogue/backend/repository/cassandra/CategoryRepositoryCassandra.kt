@@ -64,7 +64,7 @@ class CategoryRepositoryCassandra (
         runBlocking {
             initObjects.map {
                 withTimeout(timeout.toMillis()){
-                    mpr.saveAsync(CategoryCassandraDTO.of(it)).await()
+                    mpr.saveAsync(of(it)).await()
                 }
             }
         }
@@ -85,7 +85,7 @@ class CategoryRepositoryCassandra (
                 }
             }
             val childrenJob = CoroutineScope(coroutineContext).launch {
-                modelCassandra.children.forEach {
+                modelCassandra.children?.forEach {
                     CoroutineScope(coroutineContext).launch {
                         val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
                         model.children.add(child)
@@ -104,18 +104,31 @@ class CategoryRepositoryCassandra (
     }
 
     override suspend fun getMap(id: String): CategoryModel {
-        TODO("Not yet implemented")
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        val modelCassandra = withTimeout(timeout.toMillis()){
+            mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)
+        }
+        val model = modelCassandra.toModel()
+        val jobs: MutableList<Job> = mutableListOf()
+        modelCassandra.children?.forEach {
+            val job = CoroutineScope(coroutineContext).launch {
+                model.children.add(getMap(it))
+            }
+            jobs.add(job)
+        }
+        jobs.joinAll()
+        return model
     }
 
     override suspend fun create(category: CategoryModel): CategoryModel {
         val id = UUID.randomUUID().toString()
         if (category.parentId.isNotBlank()){
             val parent = withTimeout(timeout.toMillis()){
-                mapper.getAsync(category.parentId)?.await()?: throw CategoryRepoNotFoundException(category.parentId)}
-            parent.children.add(id)
-            save(parent)
+                mapper.getAsync(category.parentId)?.await()?.toModel()?: throw CategoryRepoNotFoundException(category.parentId)}
+            parent.children.add(CategoryModel(id = id))
+            save(of(parent))
         }
-        val dto = CategoryCassandraDTO.of(category, id)
+        val dto = of(category, id)
         return save(dto).toModel()
     }
 
@@ -126,8 +139,43 @@ class CategoryRepositoryCassandra (
         return save(dto.copy(label = label)).toModel()
     }
 
-    override suspend fun delete(id: String): CategoryModel {
-        TODO("Not yet implemented")
+    override suspend fun delete(id: String): CategoryModel = deleteTree(id, true)
+
+    //TODO: Think about if child category is already deleted, but parent still has a link for it
+    private suspend fun deleteTree(id: String, needRemoveFromParent: Boolean): CategoryModel {
+        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
+        return withTimeout(timeout.toMillis()){
+            val modelCassandra = mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)
+            val model = modelCassandra.toModel()
+            CoroutineScope(coroutineContext).launch {
+                mapper.deleteAsync(modelCassandra).await()
+            }
+
+            // remove id from parent's children set
+            if (needRemoveFromParent){
+                if (model.parentId.isNotBlank())
+                CoroutineScope(coroutineContext).launch {
+                    val parent = mapper.getAsync(model.parentId)?.await()
+                    parent?.let{
+                        val children = parent.children?.toMutableSet()
+                        children?.let {
+                            it.remove(id)
+                            mapper.saveAsync(parent.copy(children = children))
+                        }
+                    }
+                }
+            }
+            //TODO: Remove items
+            val jobs: MutableList<Job> = mutableListOf()
+            modelCassandra.children?.forEach {
+                val job = CoroutineScope(coroutineContext).launch {
+                    model.children.add(deleteTree(it, false))
+                }
+                jobs.add(job)
+            }
+            jobs.joinAll()
+            model
+        }
     }
 
     private suspend fun save(dto: CategoryCassandraDTO): CategoryCassandraDTO{
@@ -136,10 +184,10 @@ class CategoryRepositoryCassandra (
     }
 
     override val coroutineContext: CoroutineContext
-        get() = TODO("Not yet implemented")
+        get() = Dispatchers.Main + job
 
     override fun close() {
-        TODO("Not yet implemented")
+        job.cancel()
     }
 
     private fun parseAddresses(hosts: String): Collection<InetAddress> = hosts

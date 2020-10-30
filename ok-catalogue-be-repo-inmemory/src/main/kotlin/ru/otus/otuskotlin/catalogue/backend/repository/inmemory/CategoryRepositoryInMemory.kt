@@ -58,10 +58,18 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         return save(dto.copy(label = label)).toModel()
     }
 
+    /**
+     *  Recursive fun for delete tree of categories by top category id
+     *  @return map of categories
+     */
     override suspend fun delete(id: String): CategoryModel {
-        if (id.isBlank()) throw CategoryRepoWrongIdException(id)
-        return cache.peekAndRemove(id)?.toModel()?: throw CategoryRepoNotFoundException(id)
-        //TODO: Need deleting subcategories
+        val model = getWithChildren(id)
+        cache.peekAndRemove(id)?: throw CategoryRepoNotFoundException(id)
+        //TODO: Need deleting items
+        model.children.forEach {
+            it.children.add(delete(it.id))
+        }
+        return model
     }
 
     private suspend fun save(dto: CategoryInMemoryDTO): CategoryInMemoryDTO {
