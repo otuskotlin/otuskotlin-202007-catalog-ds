@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.backend.repository.inmemory
+package ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories
 
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import java.time.LocalDate

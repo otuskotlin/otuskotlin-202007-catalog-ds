@@ -2,7 +2,7 @@ package ru.otus.otuskotlin.catalogue.backend.repository.inmemory
 
 import kotlinx.coroutines.runBlocking
 import ru.otus.otuskotlin.catalogue.backend.common.dsl.category
-import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories.CategoryRepositoryInMemory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.DurationUnit

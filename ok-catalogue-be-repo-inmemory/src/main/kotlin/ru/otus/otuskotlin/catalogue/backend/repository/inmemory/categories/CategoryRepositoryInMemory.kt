@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.backend.repository.inmemory
+package ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories
 
 import org.cache2k.Cache
 import org.cache2k.Cache2kBuilder

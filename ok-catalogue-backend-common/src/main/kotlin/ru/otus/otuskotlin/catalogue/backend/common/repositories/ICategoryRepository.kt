@@ -1,6 +1,7 @@
 package ru.otus.otuskotlin.catalogue.backend.common.repositories
 
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 
 interface ICategoryRepository {
 
@@ -9,6 +10,9 @@ interface ICategoryRepository {
     suspend fun create(category: CategoryModel): CategoryModel
     suspend fun rename(id: String, label: String): CategoryModel
     suspend fun delete(id: String): CategoryModel
+
+    suspend fun addItem(item: ItemModel): ItemModel
+    suspend fun deleteItem(itemId: String, categotyId: String): ItemModel
 
     companion object{
         val NONE = object : ICategoryRepository{
@@ -29,6 +33,14 @@ interface ICategoryRepository {
             }
 
             override suspend fun delete(id: String): CategoryModel {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun addItem(item: ItemModel): ItemModel {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun deleteItem(itemId: String, categotyId: String): ItemModel {
                 TODO("Not yet implemented")
             }
 

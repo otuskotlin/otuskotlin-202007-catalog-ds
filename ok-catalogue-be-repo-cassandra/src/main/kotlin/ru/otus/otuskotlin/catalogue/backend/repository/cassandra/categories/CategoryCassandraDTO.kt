@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.backend.repository.cassandra
+package ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories
 
 import com.datastax.driver.mapping.annotations.Column
 import com.datastax.driver.mapping.annotations.PartitionKey

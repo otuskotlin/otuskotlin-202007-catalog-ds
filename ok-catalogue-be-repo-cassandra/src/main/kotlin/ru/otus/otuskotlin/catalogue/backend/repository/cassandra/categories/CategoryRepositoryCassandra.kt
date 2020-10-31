@@ -1,4 +1,4 @@
-package ru.otus.otuskotlin.catalogue.backend.repository.cassandra
+package ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
@@ -6,21 +6,24 @@ import com.datastax.driver.mapping.Mapper
 import com.datastax.driver.mapping.MappingManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.guava.await
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoInvalidTypeException
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoNotFoundException
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoWrongIdException
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.CATEGORY_TABLE_NAME
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_CHILDREN_ID
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_CREATION_DATE
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_ID
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_ITEMS_ID
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_LABEL
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_MODIFY_DATE
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_PARENT_ID
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.COLUMN_TYPE
-import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.CategoryCassandraDTO.Companion.of
+import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.CATEGORY_TABLE_NAME
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_CHILDREN_ID
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_CREATION_DATE
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_ID
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_ITEMS_ID
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_LABEL
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_MODIFY_DATE
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_PARENT_ID
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_TYPE
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.of
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteRepositoryCassandra
 import java.io.Closeable
 import java.net.InetAddress
 import java.time.Duration
@@ -36,7 +39,8 @@ class CategoryRepositoryCassandra (
     private val timeout: Duration = Duration.ofSeconds(10),
     private val searchParallelism: Int = 1,
     private val replicationFactor: Int = 1,
-    initObjects: Collection<CategoryModel> = emptyList()
+    initObjects: Collection<CategoryModel> = emptyList(),
+    private val itemRepositories: Collection<IItemRepository> = emptyList()
 ): ICategoryRepository, CoroutineScope, Closeable {
 
     private val job = Job()
@@ -51,7 +55,7 @@ class CategoryRepositoryCassandra (
     private val session: Session by lazy {
         runBlocking {
             createKeySpace()
-            cluster.connect(keySpace)
+            cluster.connect(keySpace).apply { createTable() }
         }
     }
 
@@ -84,20 +88,31 @@ class CategoryRepositoryCassandra (
                     parentId = parent.parentId
                 }
             }
-            val childrenJob = CoroutineScope(coroutineContext).launch {
+            val childrenJob: MutableList<Job> = mutableListOf()
                 modelCassandra.children?.forEach {
-                    CoroutineScope(coroutineContext).launch {
-                        val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
-                        model.children.add(child)
-                    }
+                    childrenJob.add(
+                            CoroutineScope(coroutineContext).launch {
+                                val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
+                                model.children.add(child)
+                            }
+                    )
+                }
+
+            val itemsJob: MutableList<Job> = mutableListOf()
+            val itemRepo = getRepoByType(model.type)
+            itemRepo?.let {
+                modelCassandra.items?.forEach {
+                    itemsJob.add(
+                            CoroutineScope(coroutineContext).launch {
+                                model.items.add(itemRepo.get(it))
+                            }
+                    )
                 }
             }
-            val itemsJob = CoroutineScope(coroutineContext).launch {
-                //TODO: Get items by async
-            }
+
             parentsJob.join()
-            childrenJob.join()
-            itemsJob.join()
+            childrenJob.joinAll()
+            itemsJob.joinAll()
             model
         }
 
@@ -141,7 +156,15 @@ class CategoryRepositoryCassandra (
 
     override suspend fun delete(id: String): CategoryModel = deleteTree(id, true)
 
-    //TODO: Think about if child category is already deleted, but parent still has a link for it
+    override suspend fun addItem(item: ItemModel): ItemModel {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteItem(itemId: String, categotyId: String): ItemModel {
+        TODO("Not yet implemented")
+    }
+
+    //TODO: Think about if child category is already deleted, but parent is still linked for it
     private suspend fun deleteTree(id: String, needRemoveFromParent: Boolean): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
@@ -165,7 +188,19 @@ class CategoryRepositoryCassandra (
                     }
                 }
             }
-            //TODO: Remove items
+
+            val itemRepo = getRepoByType(model.type)
+            val itemJobs: MutableList<Job> = mutableListOf()
+            itemRepo?.let {
+                modelCassandra.items?.forEach {
+                    itemJobs.add(
+                            CoroutineScope(coroutineContext).launch {
+                                itemRepo.delete(it)
+                            }
+                    )
+                }
+            }
+
             val jobs: MutableList<Job> = mutableListOf()
             modelCassandra.children?.forEach {
                 val job = CoroutineScope(coroutineContext).launch {
@@ -178,7 +213,7 @@ class CategoryRepositoryCassandra (
         }
     }
 
-    private suspend fun save(dto: CategoryCassandraDTO): CategoryCassandraDTO{
+    private suspend fun save(dto: CategoryCassandraDTO): CategoryCassandraDTO {
         withTimeout(timeout.toMillis()){ mapper.saveAsync(dto).await()}
         return withTimeout(timeout.toMillis()){ mapper.getAsync(dto.id).await()}
     }
@@ -189,6 +224,13 @@ class CategoryRepositoryCassandra (
     override fun close() {
         job.cancel()
     }
+
+    private  fun getRepoByType(type: String) =
+            when(type){
+                "" -> null
+                "note" -> itemRepositories.find { it::class == NoteRepositoryCassandra::class }
+                else -> throw CategoryRepoInvalidTypeException(type)
+            }
 
     private fun parseAddresses(hosts: String): Collection<InetAddress> = hosts
         .split(Regex("""\s*,\s*"""))
