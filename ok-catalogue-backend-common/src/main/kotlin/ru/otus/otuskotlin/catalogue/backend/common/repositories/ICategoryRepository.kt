@@ -11,8 +11,9 @@ interface ICategoryRepository {
     suspend fun rename(id: String, label: String): CategoryModel
     suspend fun delete(id: String): CategoryModel
 
+    suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository
     suspend fun addItem(item: ItemModel): ItemModel
-    suspend fun deleteItem(itemId: String, categotyId: String): ItemModel
+    suspend fun deleteItem(itemId: String, categoryId: String): ItemModel
 
     companion object{
         val NONE = object : ICategoryRepository{
@@ -36,11 +37,15 @@ interface ICategoryRepository {
                 TODO("Not yet implemented")
             }
 
+            override suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository {
+                TODO("Not yet implemented")
+            }
+
             override suspend fun addItem(item: ItemModel): ItemModel {
                 TODO("Not yet implemented")
             }
 
-            override suspend fun deleteItem(itemId: String, categotyId: String): ItemModel {
+            override suspend fun deleteItem(itemId: String, categoryId: String): ItemModel {
                 TODO("Not yet implemented")
             }
 

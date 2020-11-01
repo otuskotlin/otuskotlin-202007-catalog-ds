@@ -94,6 +94,9 @@ class NoteRepositoryCassandra(
         }
     }
 
+    //@TODO: with Accessor
+    override suspend fun index(categoryId: String): Collection<ItemModel>? = null
+
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
@@ -135,5 +138,9 @@ class NoteRepositoryCassandra(
             )
        """.trimIndent()).await()
 
+    }
+
+    fun init(){
+        val mapper = mapper
     }
 }

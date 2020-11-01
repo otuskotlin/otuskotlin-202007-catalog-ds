@@ -2,10 +2,15 @@ package ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories
 
 import org.cache2k.Cache
 import org.cache2k.Cache2kBuilder
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoInvalidTypeException
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoNotFoundException
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoWrongIdException
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoWromgIdException
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
+import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
+import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
+import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.items.NoteRepositoryInMemory
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -13,7 +18,8 @@ import kotlin.time.ExperimentalTime
 
 class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     ttl: Duration,
-    initObjects: Collection<CategoryModel> = emptyList()
+    initObjects: Collection<CategoryModel> = emptyList(),
+    private val itemsRepositories: MutableSet<IItemRepository> = mutableSetOf()
 ): ICategoryRepository {
     @OptIn(ExperimentalTime::class)
     private var cache: Cache<String, CategoryInMemoryDTO> = object : Cache2kBuilder<String, CategoryInMemoryDTO>() {}
@@ -34,7 +40,10 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
             model.parents.add(parent)
             parentId = parent.parentId
         }
-                //TODO: Add items
+        val itemRepo = getRepoByType(model.type)
+        itemRepo?.let {
+            model.items.addAll(getItems(id, it))
+        }
         return model
     }
 
@@ -48,8 +57,11 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
 
     override suspend fun create(category: CategoryModel): CategoryModel {
         val dto = CategoryInMemoryDTO.of(category, UUID.randomUUID().toString())
+        if (category.parentId.isNotBlank()){
+            cache.get(category.parentId)?: throw CategoryRepoNotFoundException(category.parentId)
+        }
         return save(dto).toModel()
-        //TODO: Check for parent is exist
+
     }
 
     override suspend fun rename(id: String, label: String): CategoryModel {
@@ -65,11 +77,46 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     override suspend fun delete(id: String): CategoryModel {
         val model = getWithChildren(id)
         cache.peekAndRemove(id)?: throw CategoryRepoNotFoundException(id)
-        //TODO: Need deleting items
+
+        val itemRepo = getRepoByType(model.type)
+        itemRepo?.let {repo ->
+            val itemList = getItems(id, repo).map { it.id }
+            itemList.forEach {itemId ->
+                repo.delete(itemId)
+            }
+        }
+
         model.children.forEach {
             it.children.add(delete(it.id))
         }
         return model
+    }
+
+    override suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository {
+        itemsRepositories.add(repository)
+        return this
+    }
+
+    override suspend fun addItem(item: ItemModel): ItemModel {
+        if (item.categoryId.isBlank()) throw CategoryRepoWrongIdException(item.categoryId)
+        if (item.id.isBlank()) throw ItemRepoWromgIdException(item.id)
+        val model = cache.get(item.categoryId)?.toModel()?: throw CategoryRepoNotFoundException(item.categoryId)
+        val itemRepo = getRepoByType(model.type)
+        val itemResult = itemRepo?.add(item) ?: throw Exception("Category type should not be empty.")
+        model.items.add(itemResult)
+        save(CategoryInMemoryDTO.of(model))
+        return itemResult
+    }
+
+    override suspend fun deleteItem(itemId: String, categoryId: String): ItemModel {
+        if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
+        if (itemId.isBlank()) throw ItemRepoWromgIdException(itemId)
+        val model = cache.get(categoryId)?.toModel()?: throw CategoryRepoNotFoundException(categoryId)
+        val itemRepo = getRepoByType(model.type)
+        val itemResult = itemRepo?.delete(itemId)?: throw Exception("Category type should not be empty.")
+        model.items.remove(itemResult)
+        save(CategoryInMemoryDTO.of(model))
+        return itemResult
     }
 
     private suspend fun save(dto: CategoryInMemoryDTO): CategoryInMemoryDTO {
@@ -86,4 +133,16 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
 
         return model
     }
+
+    private suspend fun getItems(categoryId: String, repository: IItemRepository): Collection<ItemModel>{
+        if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
+        return repository.index(categoryId)?: emptyList()
+    }
+
+    private  fun getRepoByType(type: String) =
+            when(type){
+                "" -> null
+                "notes" -> itemsRepositories.find { it::class == NoteRepositoryInMemory::class }
+                else -> throw CategoryRepoInvalidTypeException(type)
+            }
 }

@@ -9,6 +9,8 @@ interface IItemRepository {
 
     suspend fun get(id: String): ItemModel
 
+    suspend fun index(categoryId: String): Collection<ItemModel>?
+
     companion object{
         val NONE = object : IItemRepository{
             override suspend fun add(item: ItemModel): ItemModel {
@@ -20,6 +22,10 @@ interface IItemRepository {
             }
 
             override suspend fun get(id: String): ItemModel {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun index(categoryId: String): Collection<ItemModel>? {
                 TODO("Not yet implemented")
             }
 
