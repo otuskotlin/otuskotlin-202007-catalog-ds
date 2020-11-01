@@ -11,7 +11,6 @@ interface ICategoryRepository {
     suspend fun rename(id: String, label: String): CategoryModel
     suspend fun delete(id: String): CategoryModel
 
-    suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository
     suspend fun addItem(item: ItemModel): ItemModel
     suspend fun deleteItem(itemId: String, categoryId: String): ItemModel
 
@@ -34,10 +33,6 @@ interface ICategoryRepository {
             }
 
             override suspend fun delete(id: String): CategoryModel {
-                TODO("Not yet implemented")
-            }
-
-            override suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository {
                 TODO("Not yet implemented")
             }
 

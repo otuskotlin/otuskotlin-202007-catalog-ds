@@ -7,7 +7,7 @@ import com.datastax.driver.mapping.MappingManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.guava.await
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoNotFoundException
-import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoWromgIdException
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoWrongIdException
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
@@ -32,8 +32,8 @@ class NoteRepositoryCassandra(
         private val timeout: Duration = Duration.ofSeconds(10),
         private val searchParallelism: Int = 1,
         private val replicationFactor: Int = 1,
-        initObjects: Collection<NoteModel> = emptyList()
-): IItemRepository, CoroutineScope, Closeable {
+        initObjects: Collection<ItemModel> = emptyList()
+): IItemRepositoryCassandra {
 
     private val job = Job()
 
@@ -58,7 +58,8 @@ class NoteRepositoryCassandra(
     private val mapper: Mapper<NoteCassandraDTO> by lazy {
         val mpr = manager.mapper(NoteCassandraDTO::class.java, keySpace)
         runBlocking {
-            initObjects.map {
+            initObjects.filterIsInstance<NoteModel>()
+                    .map {
                 withTimeout(timeout.toMillis()){
                     mpr.saveAsync(NoteCassandraDTO.of(it)).await()
                 }
@@ -76,7 +77,7 @@ class NoteRepositoryCassandra(
     }
 
     override suspend fun delete(id: String): ItemModel {
-        if (id.isBlank()) throw ItemRepoWromgIdException(id)
+        if (id.isBlank()) throw ItemRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
             val item = mapper.getAsync(id).await()
             item?.let{
@@ -88,14 +89,11 @@ class NoteRepositoryCassandra(
     }
 
     override suspend fun get(id: String): ItemModel {
-        if (id.isBlank()) throw ItemRepoWromgIdException(id)
+        if (id.isBlank()) throw ItemRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
             mapper.getAsync(id)?.await()?.toModel()?:throw ItemRepoNotFoundException(id)
         }
     }
-
-    //@TODO: with Accessor
-    override suspend fun index(categoryId: String): Collection<ItemModel>? = null
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
@@ -140,7 +138,8 @@ class NoteRepositoryCassandra(
 
     }
 
-    fun init(){
+    override fun init(): IItemRepositoryCassandra {
         val mapper = mapper
+        return this
     }
 }

@@ -9,8 +9,6 @@ import kotlinx.coroutines.guava.await
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.*
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
-import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
-import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.CATEGORY_TABLE_NAME
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_CHILDREN_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_CREATION_DATE
@@ -21,8 +19,8 @@ import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.Cate
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_PARENT_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_TYPE
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.of
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.IItemRepositoryCassandra
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteRepositoryCassandra
-import java.io.Closeable
 import java.net.InetAddress
 import java.time.Duration
 import java.util.*
@@ -38,8 +36,8 @@ class CategoryRepositoryCassandra (
     private val searchParallelism: Int = 1,
     private val replicationFactor: Int = 1,
     initObjects: Collection<CategoryModel> = emptyList(),
-    private val itemRepositories: MutableSet<IItemRepository> = mutableSetOf()
-): ICategoryRepository, CoroutineScope, Closeable {
+    private val itemRepositories: MutableSet<IItemRepositoryCassandra> = mutableSetOf()
+): ICategoryRepositoryCassandra {
 
     private val job = Job()
 
@@ -154,20 +152,14 @@ class CategoryRepositoryCassandra (
 
     override suspend fun delete(id: String): CategoryModel = deleteTree(id, true)
 
-    override suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository{
-        itemRepositories.add(repository)
-        return this
-    }
-
-
     override suspend fun addItem(item: ItemModel): ItemModel {
         if (item.categoryId.isBlank()) throw CategoryRepoWrongIdException(item.categoryId)
-        if (item.id.isBlank()) throw ItemRepoWromgIdException(item.id)
+        if (item.id.isBlank()) throw ItemRepoWrongIdException(item.id)
         return withTimeout(timeout.toMillis()){
             val modelCassandra = mapper.getAsync(item.categoryId)?.await()?: throw CategoryRepoNotFoundException(item.categoryId)
             val model = modelCassandra.toModel()
             val itemRepo = getRepoByType(model.type)
-            val itemResult = itemRepo?.add(item)?: throw Exception("Category type should not be empty.")
+            val itemResult = itemRepo?.add(item)?: throw CategoryNotForItemsException(item.categoryId)
             model.items.add(itemResult)
             mapper.saveAsync(of(model)).await()
             itemResult
@@ -176,12 +168,12 @@ class CategoryRepositoryCassandra (
 
     override suspend fun deleteItem(itemId: String, categoryId: String): ItemModel {
         if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
-        if (itemId.isBlank()) throw ItemRepoWromgIdException(itemId)
+        if (itemId.isBlank()) throw ItemRepoWrongIdException(itemId)
         return withTimeout(timeout.toMillis()){
             val modelCassandra = mapper.getAsync(categoryId)?.await()?: throw CategoryRepoNotFoundException(categoryId)
             val model = modelCassandra.toModel()
             val itemRepo = getRepoByType(model.type)
-            val itemResult = itemRepo?.delete(itemId)?: throw Exception("Category type should not be empty.")
+            val itemResult = itemRepo?.delete(itemId)?: throw CategoryNotForItemsException(categoryId)
             model.items.remove(itemResult)
             mapper.saveAsync(of(model)).await()
             itemResult
@@ -249,16 +241,16 @@ class CategoryRepositoryCassandra (
 
     override fun close() {
         itemRepositories.forEach {
-            if (it is Closeable)
                 it.close()
         }
         job.cancel()
     }
 
     private  fun getRepoByType(type: String) =
-            when(type){
+            when(type.toLowerCase()){
                 "" -> null
                 "notes" -> itemRepositories.find { it::class == NoteRepositoryCassandra::class }
+                        ?: throw RepoClassNotFoundException(NoteRepositoryCassandra::class)
                 else -> throw CategoryRepoInvalidTypeException(type)
             }
 
@@ -297,7 +289,16 @@ class CategoryRepositoryCassandra (
     }
 
     // init lazy fields
-    fun init(){
+    override fun init(): ICategoryRepositoryCassandra {
         val mapper = mapper
+        itemRepositories.forEach {
+            it.init()
+        }
+        return this
+    }
+
+    override fun addItemRepository(repository: IItemRepositoryCassandra): ICategoryRepositoryCassandra {
+        itemRepositories.add(repository)
+        return this
     }
 }

@@ -2,14 +2,10 @@ package ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories
 
 import org.cache2k.Cache
 import org.cache2k.Cache2kBuilder
-import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoInvalidTypeException
-import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoNotFoundException
-import ru.otus.otuskotlin.catalogue.backend.common.exceptions.CategoryRepoWrongIdException
-import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoWromgIdException
+import ru.otus.otuskotlin.catalogue.backend.common.exceptions.*
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
-import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
-import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
+import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.items.IItemRepositoryInMemory
 import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.items.NoteRepositoryInMemory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -19,8 +15,8 @@ import kotlin.time.ExperimentalTime
 class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
     ttl: Duration,
     initObjects: Collection<CategoryModel> = emptyList(),
-    private val itemsRepositories: MutableSet<IItemRepository> = mutableSetOf()
-): ICategoryRepository {
+    private val itemsRepositories: MutableSet<IItemRepositoryInMemory> = mutableSetOf()
+): ICategoryRepositoryInMemory {
     @OptIn(ExperimentalTime::class)
     private var cache: Cache<String, CategoryInMemoryDTO> = object : Cache2kBuilder<String, CategoryInMemoryDTO>() {}
         .expireAfterWrite(ttl.toLongMilliseconds(), TimeUnit.MILLISECONDS) // expire/refresh after 5 minutes
@@ -92,17 +88,17 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         return model
     }
 
-    override suspend fun addItemRepository(repository: IItemRepository): ICategoryRepository {
+    override fun addItemRepository(repository: IItemRepositoryInMemory): ICategoryRepositoryInMemory {
         itemsRepositories.add(repository)
         return this
     }
 
     override suspend fun addItem(item: ItemModel): ItemModel {
         if (item.categoryId.isBlank()) throw CategoryRepoWrongIdException(item.categoryId)
-        if (item.id.isBlank()) throw ItemRepoWromgIdException(item.id)
+        if (item.id.isBlank()) throw ItemRepoWrongIdException(item.id)
         val model = cache.get(item.categoryId)?.toModel()?: throw CategoryRepoNotFoundException(item.categoryId)
         val itemRepo = getRepoByType(model.type)
-        val itemResult = itemRepo?.add(item) ?: throw Exception("Category type should not be empty.")
+        val itemResult = itemRepo?.add(item) ?: throw CategoryNotForItemsException(item.categoryId)
         model.items.add(itemResult)
         save(CategoryInMemoryDTO.of(model))
         return itemResult
@@ -110,10 +106,10 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
 
     override suspend fun deleteItem(itemId: String, categoryId: String): ItemModel {
         if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
-        if (itemId.isBlank()) throw ItemRepoWromgIdException(itemId)
+        if (itemId.isBlank()) throw ItemRepoWrongIdException(itemId)
         val model = cache.get(categoryId)?.toModel()?: throw CategoryRepoNotFoundException(categoryId)
         val itemRepo = getRepoByType(model.type)
-        val itemResult = itemRepo?.delete(itemId)?: throw Exception("Category type should not be empty.")
+        val itemResult = itemRepo?.delete(itemId)?: throw CategoryNotForItemsException(categoryId)
         model.items.remove(itemResult)
         save(CategoryInMemoryDTO.of(model))
         return itemResult
@@ -134,15 +130,16 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         return model
     }
 
-    private suspend fun getItems(categoryId: String, repository: IItemRepository): Collection<ItemModel>{
+    private suspend fun getItems(categoryId: String, repository: IItemRepositoryInMemory): Collection<ItemModel>{
         if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
         return repository.index(categoryId)?: emptyList()
     }
 
     private  fun getRepoByType(type: String) =
-            when(type){
+            when(type.toLowerCase()){
                 "" -> null
                 "notes" -> itemsRepositories.find { it::class == NoteRepositoryInMemory::class }
+                        ?: throw RepoClassNotFoundException(NoteRepositoryInMemory::class)
                 else -> throw CategoryRepoInvalidTypeException(type)
             }
 }

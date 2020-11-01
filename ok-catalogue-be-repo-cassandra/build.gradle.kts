@@ -11,7 +11,6 @@ repositories {
 
 dependencies {
     val coroutinesVersion: String by project
-    val cache2kVersion: String by project
     val testContainersVersion: String by project
     val cassandraVersion: String by project
 
