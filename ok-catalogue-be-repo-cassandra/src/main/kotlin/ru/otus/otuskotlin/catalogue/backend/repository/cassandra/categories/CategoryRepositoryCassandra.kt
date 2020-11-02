@@ -1,7 +1,10 @@
 package ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories
 
 import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.CodecRegistry
 import com.datastax.driver.core.Session
+import com.datastax.driver.core.TypeCodec
+import com.datastax.driver.extras.codecs.jdk8.LocalDateCodec
 import com.datastax.driver.mapping.Mapper
 import com.datastax.driver.mapping.MappingManager
 import kotlinx.coroutines.*
@@ -45,6 +48,8 @@ class CategoryRepositoryCassandra (
         Cluster.builder().addContactPoints(parseAddresses(hosts))
             .withPort(port)
             .withCredentials(user, pass)
+                .withCodecRegistry(CodecRegistry().register(TypeCodec.set(TypeCodec.varchar())))
+                .withCodecRegistry(CodecRegistry().register(LocalDateCodec.instance))
             .build()
     }
 
@@ -62,7 +67,7 @@ class CategoryRepositoryCassandra (
     private val mapper: Mapper<CategoryCassandraDTO> by lazy {
         val mpr = manager.mapper(CategoryCassandraDTO::class.java, keySpace)
         runBlocking {
-            initObjects.map {
+            initObjects.treeToList().map {
                 withTimeout(timeout.toMillis()){
                     mpr.saveAsync(of(it)).await()
                 }
@@ -93,6 +98,7 @@ class CategoryRepositoryCassandra (
                             }
                     )
                 }
+            //println("childrenJobs=${childrenJob.size}")
 
             val itemsJob: MutableList<Job> = mutableListOf()
             val itemRepo = getRepoByType(model.type)
@@ -114,40 +120,42 @@ class CategoryRepositoryCassandra (
 
     }
 
+    //TODO: Think about how to make it this coroutines
     override suspend fun getMap(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
-        val modelCassandra = withTimeout(timeout.toMillis()){
-            mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)
+        val modelCassandra = withTimeout(timeout.toMillis()) {
+            mapper.getAsync(id)?.await() ?: throw CategoryRepoNotFoundException(id)
         }
         val model = modelCassandra.toModel()
-        val jobs: MutableList<Job> = mutableListOf()
+        //val jobs: MutableList<Job> = mutableListOf()
         modelCassandra.children?.forEach {
-            val job = CoroutineScope(coroutineContext).launch {
+          //  val job = CoroutineScope(coroutineContext).launch {
                 model.children.add(getMap(it))
-            }
-            jobs.add(job)
+           // }
+           // jobs.add(job)
         }
-        jobs.joinAll()
+        //jobs.joinAll()
         return model
     }
 
     override suspend fun create(category: CategoryModel): CategoryModel {
         val id = UUID.randomUUID().toString()
+        val dto = of(category, id)
+        val model = save(dto)
         if (category.parentId.isNotBlank()){
             val parent = withTimeout(timeout.toMillis()){
                 mapper.getAsync(category.parentId)?.await()?.toModel()?: throw CategoryRepoNotFoundException(category.parentId)}
             parent.children.add(CategoryModel(id = id))
             save(of(parent))
         }
-        val dto = of(category, id)
-        return save(dto).toModel()
+        return model
     }
 
     override suspend fun rename(id: String, label: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         val dto = withTimeout(timeout.toMillis()){
             mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)}
-        return save(dto.copy(label = label)).toModel()
+        return save(dto.copy(label = label))
     }
 
     override suspend fun delete(id: String): CategoryModel = deleteTree(id, true)
@@ -231,9 +239,9 @@ class CategoryRepositoryCassandra (
         }
     }
 
-    private suspend fun save(dto: CategoryCassandraDTO): CategoryCassandraDTO {
+    private suspend fun save(dto: CategoryCassandraDTO): CategoryModel{
         withTimeout(timeout.toMillis()){ mapper.saveAsync(dto).await()}
-        return withTimeout(timeout.toMillis()){ mapper.getAsync(dto.id).await()}
+        return get(dto.id?:"")
     }
 
     override val coroutineContext: CoroutineContext
@@ -253,6 +261,16 @@ class CategoryRepositoryCassandra (
                         ?: throw RepoClassNotFoundException(NoteRepositoryCassandra::class)
                 else -> throw CategoryRepoInvalidTypeException(type)
             }
+
+    private fun Collection<CategoryModel>.treeToList(): Collection<CategoryModel>{
+        val models = this.toMutableList()
+        var counter = models.size
+        for (i in 0 until counter){
+            models.addAll(models[i].children)
+            counter += models[i].children.size
+        }
+        return models
+    }
 
     private fun parseAddresses(hosts: String): Collection<InetAddress> = hosts
         .split(Regex("""\s*,\s*"""))
@@ -277,8 +295,8 @@ class CategoryRepositoryCassandra (
                $COLUMN_TYPE text,
                $COLUMN_LABEL text,
                $COLUMN_PARENT_ID text,
-               $COLUMN_CHILDREN_ID list <text>,
-               $COLUMN_ITEMS_ID list <text>,
+               $COLUMN_CHILDREN_ID set <text>,
+               $COLUMN_ITEMS_ID set <text>,
                $COLUMN_CREATION_DATE date,
                $COLUMN_MODIFY_DATE date,
 

@@ -4,23 +4,24 @@ import com.datastax.driver.mapping.annotations.Column
 import com.datastax.driver.mapping.annotations.PartitionKey
 import com.datastax.driver.mapping.annotations.Table
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.ITEM_TABLE_NAME
 
-@Table(name = "ITEM_TABLE_NAME")
+@Table(name = ITEM_TABLE_NAME)
 data class NoteCassandraDTO(
         @PartitionKey(0)
-        @Column(name = "COLUMN_ID")
+        @Column(name = COLUMN_ID)
         val id: String? = null,
 
-        @Column(name = "COLUMN_CATEGORY_ID")
+        @Column(name = COLUMN_CATEGORY_ID)
         val categoryId: String? = null,
 
-        @Column(name = "COLUMN_HEADER")
+        @Column(name = COLUMN_HEADER)
         val header: String? = null,
 
-        @Column(name = "COLUMN_DESCRIPTION")
+        @Column(name = COLUMN_DESCRIPTION)
         val description: String? = null,
 
-        @Column(name = "COLUMN_PREVIEW")
+        @Column(name = COLUMN_PREVIEW)
         val preview: String? = null
 ) {
     fun toModel() = NoteModel(

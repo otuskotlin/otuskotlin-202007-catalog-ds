@@ -40,3 +40,5 @@ MODULES:
 **ok-catalogue-common-validators** - Библиотека валидаторов
 
 **ok-catalogue-be-repo-inmemory** - Модуль репозитория cache2k
+
+**ok-catalogue-be-repo-cassandra** - Модуль репозитория Cassandra

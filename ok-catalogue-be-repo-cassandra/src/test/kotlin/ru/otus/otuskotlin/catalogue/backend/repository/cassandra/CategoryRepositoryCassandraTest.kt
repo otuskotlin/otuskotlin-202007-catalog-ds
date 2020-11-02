@@ -20,8 +20,7 @@ internal class CategoryRepositoryCassandraTest{
 
     companion object{
         private val PORT = 9042
-        private val keyspace = "categories"
-        private val itemKeyspace = "item_test_keyspace"
+        private val keyspace = "test_keyspace"
         private lateinit var container: CassandraContainer
         private lateinit var repo: CategoryRepositoryCassandra
         private lateinit var itemRepo: IItemRepositoryCassandra
@@ -31,13 +30,13 @@ internal class CategoryRepositoryCassandraTest{
         fun tearUp(){
             container = CassandraContainer()
                     .withExposedPorts(PORT)
-                    .withStartupTimeout(Duration.ofSeconds(40L))
+                    .withStartupTimeout(Duration.ofSeconds(120L))
                     .apply {
                         start()
                     }
             val children = mutableSetOf(
-                    CategoryModel(id = "child-1", label = "subcategory1"),
-                    CategoryModel(id = "child-2", label = "subcategory2")
+                    CategoryModel(id = "child-1", parentId = "root", label = "subcategory1"),
+                    CategoryModel(id = "child-2", parentId = "root", label = "subcategory2")
             )
 
             val items = mutableSetOf<ItemModel>(
@@ -55,7 +54,7 @@ internal class CategoryRepositoryCassandraTest{
             )
 
             itemRepo = NoteRepositoryCassandra(
-                    keySpace = itemKeyspace,
+                    keySpace = keyspace,
                     hosts = container.host,
                     port = container.getMappedPort(PORT),
                     initObjects = items.toList()
@@ -79,6 +78,29 @@ internal class CategoryRepositoryCassandraTest{
             println(model)
             assertEquals("main", model.label)
             assertEquals(2, model.children.size)
+        }
+    }
+
+    @Test
+    fun getWithItemsTest(){
+        runBlocking {
+            val model = repo.get("delete-id")
+
+            println(model)
+            assertEquals("deleted", model.label)
+            assertEquals(1, model.items.size)
+        }
+    }
+
+    @Test
+    fun createAndGetMap(){
+        runBlocking {
+            val model = repo.create(CategoryModel(parentId = "child-1", label = "child-3"))
+            assertEquals("child-3", model.label)
+
+            val tree = repo.getMap("root")
+            println(tree)
+            assertEquals(1, tree.children.find { it.id == "child-1" }?.children?.size)
         }
     }
 }

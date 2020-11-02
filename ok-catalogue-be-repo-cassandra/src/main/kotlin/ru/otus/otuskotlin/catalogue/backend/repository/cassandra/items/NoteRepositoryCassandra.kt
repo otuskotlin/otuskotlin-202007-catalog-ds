@@ -10,7 +10,6 @@ import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoNotFoundEx
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.ItemRepoWrongIdException
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
-import ru.otus.otuskotlin.catalogue.backend.common.repositories.IItemRepository
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.COLUMN_CATEGORY_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.COLUMN_DESCRIPTION
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.COLUMN_HEADER
@@ -18,7 +17,6 @@ import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassa
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.COLUMN_PREVIEW
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.ITEM_TABLE_NAME
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteCassandraDTO.Companion.of
-import java.io.Closeable
 import java.net.InetAddress
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
@@ -126,11 +124,11 @@ class NoteRepositoryCassandra(
     private suspend fun Session.createTable() {
         executeAsync("""
             CREATE TABLE IF NOT EXISTS $ITEM_TABLE_NAME (
-                $COLUMN_ID = text,
-                $COLUMN_CATEGORY_ID = text,
-                $COLUMN_HEADER = text,
-                $COLUMN_DESCRIPTION = text,
-                $COLUMN_PREVIEW = text,
+                $COLUMN_ID text,
+                $COLUMN_CATEGORY_ID text,
+                $COLUMN_HEADER text,
+                $COLUMN_DESCRIPTION text,
+                $COLUMN_PREVIEW text,
 
                PRIMARY KEY ($COLUMN_ID)
             )
