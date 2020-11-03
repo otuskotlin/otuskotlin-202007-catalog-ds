@@ -120,22 +120,21 @@ class CategoryRepositoryCassandra (
 
     }
 
-    //TODO: Think about how to make it this coroutines
     override suspend fun getMap(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
-        val modelCassandra = withTimeout(timeout.toMillis()) {
-            mapper.getAsync(id)?.await() ?: throw CategoryRepoNotFoundException(id)
+        return withTimeout(timeout.toMillis()){
+            val modelCassandra = mapper.getAsync(id)?.await() ?: throw CategoryRepoNotFoundException(id)
+            val model = modelCassandra.toModel()
+            val jobs: MutableList<Job> = mutableListOf()
+            modelCassandra.children?.forEach {
+                  val job = CoroutineScope(coroutineContext).launch {
+                    model.children.add(getMap(it))
+                 }
+                 jobs.add(job)
+            }
+            jobs.joinAll()
+            model
         }
-        val model = modelCassandra.toModel()
-        //val jobs: MutableList<Job> = mutableListOf()
-        modelCassandra.children?.forEach {
-          //  val job = CoroutineScope(coroutineContext).launch {
-                model.children.add(getMap(it))
-           // }
-           // jobs.add(job)
-        }
-        //jobs.joinAll()
-        return model
     }
 
     override suspend fun create(category: CategoryModel): CategoryModel {
@@ -143,8 +142,7 @@ class CategoryRepositoryCassandra (
         val dto = of(category, id)
         val model = save(dto)
         if (category.parentId.isNotBlank()){
-            val parent = withTimeout(timeout.toMillis()){
-                mapper.getAsync(category.parentId)?.await()?.toModel()?: throw CategoryRepoNotFoundException(category.parentId)}
+            val parent = get(category.parentId)
             parent.children.add(CategoryModel(id = id))
             save(of(parent))
         }
@@ -194,9 +192,6 @@ class CategoryRepositoryCassandra (
         return withTimeout(timeout.toMillis()){
             val modelCassandra = mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)
             val model = modelCassandra.toModel()
-            CoroutineScope(coroutineContext).launch {
-                mapper.deleteAsync(modelCassandra).await()
-            }
 
             // remove id from parent's children set
             if (needRemoveFromParent){
@@ -211,6 +206,10 @@ class CategoryRepositoryCassandra (
                         }
                     }
                 }
+            }
+
+            CoroutineScope(coroutineContext).launch {
+                mapper.deleteAsync(modelCassandra).await()
             }
 
             // delete items branch

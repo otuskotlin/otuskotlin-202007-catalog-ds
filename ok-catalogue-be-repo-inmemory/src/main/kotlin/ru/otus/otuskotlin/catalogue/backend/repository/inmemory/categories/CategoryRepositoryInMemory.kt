@@ -23,7 +23,7 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         .suppressExceptions(false)
         .build()
         .also { cache ->
-            initObjects.forEach {
+            initObjects.treeToList().forEach {
                 cache.put(it.id, CategoryInMemoryDTO.of(it))
             }
         }
@@ -113,6 +113,16 @@ class CategoryRepositoryInMemory @OptIn(ExperimentalTime::class) constructor(
         model.items.remove(itemResult)
         save(CategoryInMemoryDTO.of(model))
         return itemResult
+    }
+
+    private fun Collection<CategoryModel>.treeToList(): Collection<CategoryModel>{
+        val models = this.toMutableList()
+        var counter = models.size
+        for (i in 0 until counter){
+            models.addAll(models[i].children)
+            counter += models[i].children.size
+        }
+        return models
     }
 
     private suspend fun save(dto: CategoryInMemoryDTO): CategoryInMemoryDTO {
