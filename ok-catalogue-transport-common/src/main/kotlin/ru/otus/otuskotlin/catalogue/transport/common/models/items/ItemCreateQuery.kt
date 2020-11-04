@@ -3,6 +3,8 @@ package ru.otus.otuskotlin.catalogue.transport.common.models.items
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import ru.otus.otuskotlin.catalogue.transport.common.models.CatalogueDbModes
+
 //
 //@Serializable
 //abstract class ItemCreateQuery (
@@ -16,7 +18,8 @@ sealed class ItemCreateQuery(
 ) {
     @Serializable
     data class Debug (
-            val stub: StubCases? = null
+            val stub: StubCases? = null,
+            val dbMode: CatalogueDbModes? = null
     )
 
     @Serializable

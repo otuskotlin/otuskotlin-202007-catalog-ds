@@ -11,20 +11,61 @@ import io.ktor.serialization.json
 import kotlinx.serialization.json.Json
 import ru.otus.otuskotlin.catalogue.backend.logics.categories.CategoryCrud
 import ru.otus.otuskotlin.catalogue.backend.logics.items.ItemCrud
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryRepositoryCassandra
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.items.NoteRepositoryCassandra
+import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.categories.CategoryRepositoryInMemory
+import ru.otus.otuskotlin.catalogue.backend.repository.inmemory.items.NoteRepositoryInMemory
 import ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries.*
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemCreateQuery
 import ru.otus.otuskotlin.catalogue.transport.common.models.items.ItemDeleteQuery
 import ru.otus.otuskotlin.catalogue.transport.rest.service.CategoryService
 import ru.otus.otuskotlin.catalogue.transport.rest.service.ItemService
+import ru.otus.otuskotlin.configs.CassandraConfig
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.toDuration
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+@OptIn(ExperimentalTime::class)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
 
-    val service = CategoryService(CategoryCrud.DEFAULT)
-    val itemService = ItemService(ItemCrud.DEFAULT)
+    val cassandraConfig = CassandraConfig()
+
+    val itemRepoTest = NoteRepositoryInMemory(ttl = 30.toDuration(DurationUnit.MINUTES))
+    val categoryRepoTest = CategoryRepositoryInMemory(ttl = 30.toDuration(DurationUnit.MINUTES))
+        .addItemRepository(itemRepoTest)
+
+    val itemRepoProd = NoteRepositoryCassandra(
+        keySpace = cassandraConfig.keyspace,
+        hosts = cassandraConfig.hosts,
+        port = cassandraConfig.port,
+        user = cassandraConfig.user,
+        pass = cassandraConfig.pass
+    )
+
+    val categoryRepoProd = CategoryRepositoryCassandra(
+        keySpace = cassandraConfig.keyspace,
+        hosts = cassandraConfig.hosts,
+        port = cassandraConfig.port,
+        user = cassandraConfig.user,
+        pass = cassandraConfig.pass
+    ).addItemRepository(itemRepoProd)
+
+    val itemCrud = ItemCrud(
+        categoryRepoTest = categoryRepoTest,
+        categoryRepoProd = categoryRepoProd
+    )
+
+    val categoryCrud = CategoryCrud(
+        categoryRepoTest = categoryRepoTest,
+        categoryRepoProd = categoryRepoProd
+    )
+
+    val service = CategoryService(categoryCrud)
+    val itemService = ItemService(itemCrud)
 
     install(CORS) {
         method(HttpMethod.Options)

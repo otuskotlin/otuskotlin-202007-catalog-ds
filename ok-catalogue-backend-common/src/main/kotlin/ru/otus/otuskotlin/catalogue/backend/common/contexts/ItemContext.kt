@@ -5,8 +5,13 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryMod
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemCreateStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemDeleteStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
+import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 
 data class ItemContext(
+        override var workMode: WorkModes = WorkModes.DEFAULT,
+        override var categoryRepo: ICategoryRepository = ICategoryRepository.NONE,
+        override var categoryRepoTest: ICategoryRepository = ICategoryRepository.NONE,
+        override var categoryRepoProd: ICategoryRepository = ICategoryRepository.NONE,
         override var errors: MutableList<IErrorModel> = mutableListOf(),
         override var status: ContextStatus = ContextStatus.NONE,
         var requestCategoryId: String = "",
@@ -17,6 +22,10 @@ data class ItemContext(
         var stubICreateCase: ItemCreateStubCases = ItemCreateStubCases.NONE,
         var stubIDeleteCase: ItemDeleteStubCases = ItemDeleteStubCases.NONE
 ): BaseContext(
+        workMode = workMode,
+        categoryRepo = categoryRepo,
+        categoryRepoTest = categoryRepoTest,
+        categoryRepoProd = categoryRepoProd,
         errors = errors,
         status = status
 )

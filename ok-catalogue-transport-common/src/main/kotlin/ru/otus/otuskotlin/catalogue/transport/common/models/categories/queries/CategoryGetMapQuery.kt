@@ -1,6 +1,7 @@
 package ru.otus.otuskotlin.catalogue.transport.common.models.categories.queries
 
 import kotlinx.serialization.Serializable
+import ru.otus.otuskotlin.catalogue.transport.common.models.CatalogueDbModes
 
 @Serializable
 data class CategoryGetMapQuery(
@@ -9,7 +10,8 @@ data class CategoryGetMapQuery(
 ) {
     @Serializable
     data class Debug (
-            val stub: StubCases? = null
+            val stub: StubCases? = null,
+            val dbMode: CatalogueDbModes? = null
     )
 
     @Serializable

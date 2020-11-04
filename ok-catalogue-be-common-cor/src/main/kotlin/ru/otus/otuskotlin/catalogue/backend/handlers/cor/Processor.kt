@@ -22,7 +22,6 @@ class Processor<T> private constructor(
             handlers.add(
                 corHandler {
                     exec(block)
-                     //exec{block}
                 }
             )
         }

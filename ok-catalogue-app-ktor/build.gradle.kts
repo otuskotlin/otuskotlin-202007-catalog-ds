@@ -43,6 +43,8 @@ dependencies {
     implementation(project(":ok-catalogue-transport-common"))
     implementation(project(":ok-catalogue-transport-rest"))
     implementation(project(":ok-catalogue-be-logic"))
+    implementation(project(":ok-catalogue-be-repo-inmemory"))
+    implementation(project(":ok-catalogue-be-repo-cassandra"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
