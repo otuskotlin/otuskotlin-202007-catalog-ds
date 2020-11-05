@@ -32,6 +32,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
 
+    //TODO: try with environment
     val cassandraConfig = CassandraConfig()
 
     val itemRepoTest = NoteRepositoryInMemory(ttl = 30.toDuration(DurationUnit.MINUTES))

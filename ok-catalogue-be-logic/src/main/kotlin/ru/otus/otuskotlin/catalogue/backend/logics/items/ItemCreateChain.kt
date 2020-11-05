@@ -8,6 +8,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryReposit
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.prepareResponse
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.setRepoByWorkMode
+import ru.otus.otuskotlin.catalogue.backend.logics.items.stubs.itemCreateStub
 
 class ItemCreateChain(
     private val categoryRepoTest: ICategoryRepository,
@@ -30,22 +31,7 @@ class ItemCreateChain(
             }
 
             // stub handling
-            processor {
-                isMatchable {
-                    stubICreateCase != ItemCreateStubCases.NONE
-                }
-
-                handler {
-                    isMatchable {
-                        stubICreateCase == ItemCreateStubCases.SUCCESS
-                    }
-
-                    exec {
-                        responseItem = requestItem
-                        status = ContextStatus.FINISHING
-                    }
-                }
-            }
+            exec(itemCreateStub)
 
             // job with db
             handler {

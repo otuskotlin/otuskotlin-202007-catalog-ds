@@ -8,6 +8,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryRen
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
+import ru.otus.otuskotlin.catalogue.backend.logics.categories.stubs.categoryRenameStub
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.prepareResponse
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.setRepoByWorkMode
 import java.time.LocalDate
@@ -33,34 +34,7 @@ class CategoryRenameChain(
             }
 
             // stub handling
-            processor {
-                isMatchable {
-                    stubCRenameCase != CategoryRenameStubCases.NONE
-                }
-
-                handler {
-                    isMatchable { stubCRenameCase == CategoryRenameStubCases.SUCCESS }
-
-                    exec {
-                        responseCategory = CategoryModel(
-                            id = requestCategoryId,
-                            label = requestLabel,
-                            type = "notes",
-                            children = mutableSetOf(CategoryModel(id = "12346", label = "Subdir")),
-                            items = mutableSetOf(
-                                NoteModel(
-                                    id = "12",
-                                    header = "My note",
-                                    description = "Some note",
-                                    preview = "qwerty"
-                                )
-                            ),
-                            creationDate = LocalDate.of(2010, 6, 13)
-                        )
-                        status = ContextStatus.FINISHING
-                    }
-                }
-            }
+            exec(categoryRenameStub)
 
             // job with db
             handler {

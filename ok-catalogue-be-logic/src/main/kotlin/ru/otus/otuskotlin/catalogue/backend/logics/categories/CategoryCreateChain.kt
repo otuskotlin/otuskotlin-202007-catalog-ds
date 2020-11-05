@@ -7,6 +7,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryCre
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.CorHandler
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
+import ru.otus.otuskotlin.catalogue.backend.logics.categories.stubs.categoryCreateStub
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.prepareResponse
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.setRepoByWorkMode
 
@@ -31,20 +32,7 @@ class CategoryCreateChain(
             }
 
             // stub handling
-            processor {
-                isMatchable { stubCCreateCase != CategoryCreateStubCases.NONE }
-
-                handler {
-                    isMatchable { stubCCreateCase == CategoryCreateStubCases.SUCCESS }
-
-                    exec {
-                        responseCategory = requestCategory.copy(
-                            id = "stub-create-category"
-                        )
-                        status = ContextStatus.FINISHING
-                    }
-                }
-            }
+            exec(categoryCreateStub)
 
             // job with db
             handler {

@@ -116,7 +116,7 @@ class ApplicationTest {
 
                 val res = format.decodeFromString(CategoryGetResponse.serializer(), jsonString)
 
-                assertEquals(emptyList(), res.data?.childList)
+                assertEquals("12346", res.data?.id)
             }
         }
     }
@@ -251,6 +251,7 @@ class ApplicationTest {
 
                 val res = format.decodeFromString(ItemResponse.serializer(), jsonString)
 
+                assertEquals(NoteInfo::class, res.data!!::class)
                 assertEquals("54321", (res.data as NoteInfo).id)
             }
         }
@@ -291,7 +292,9 @@ class ApplicationTest {
 
                 val res = format.decodeFromString(ItemResponse.serializer(), jsonString)
 
-                assertEquals(NoteInfo(), res.data)
+                assertEquals(NoteInfo::class, res.data!!::class)
+                assertEquals("12345", (res.data as NoteInfo).categoryId)
+                assertEquals("12", (res.data as NoteInfo).id)
             }
         }
     }

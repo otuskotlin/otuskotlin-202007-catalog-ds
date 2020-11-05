@@ -8,6 +8,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryMod
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.NoteModel
 import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
+import ru.otus.otuskotlin.catalogue.backend.logics.categories.stubs.categoryDeleteStub
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.prepareResponse
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.setRepoByWorkMode
 import java.time.LocalDate
@@ -33,32 +34,7 @@ class CategoryDeleteChain(
             }
 
             // stub handling
-            processor {
-                isMatchable { stubCDeleteCase != CategoryDeleteStubCases.NONE }
-
-                handler {
-                    isMatchable { stubCDeleteCase == CategoryDeleteStubCases.SUCCESS }
-
-                    exec {
-                        responseCategory = CategoryModel(
-                            id = "stub-delete-category",
-                            label = "Notes",
-                            type = "notes",
-                            children = mutableSetOf(CategoryModel(id = requestCategoryId, label = "Subdir")),
-                            items = mutableSetOf(
-                                NoteModel(
-                                    id = "12",
-                                    header = "My note",
-                                    description = "Some note",
-                                    preview = "qwerty"
-                                )
-                            ),
-                            creationDate = LocalDate.of(2010, 6, 13)
-                        ).apply { children.removeIf { it.id == requestCategoryId } }
-                        status = ContextStatus.FINISHING
-                    }
-                }
-            }
+            exec(categoryDeleteStub)
 
             // job with db
             handler {

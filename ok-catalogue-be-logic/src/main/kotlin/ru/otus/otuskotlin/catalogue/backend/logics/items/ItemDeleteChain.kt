@@ -9,6 +9,7 @@ import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryReposit
 import ru.otus.otuskotlin.catalogue.backend.handlers.cor.corProc
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.prepareResponse
 import ru.otus.otuskotlin.catalogue.backend.logics.handlers.setRepoByWorkMode
+import ru.otus.otuskotlin.catalogue.backend.logics.items.stubs.itemDeleteStub
 
 class ItemDeleteChain(
     private val categoryRepoTest: ICategoryRepository,
@@ -30,22 +31,7 @@ class ItemDeleteChain(
             }
 
             // stub handling
-            processor {
-                isMatchable {
-                    stubIDeleteCase != ItemDeleteStubCases.NONE
-                }
-
-                handler {
-                    isMatchable {
-                        stubIDeleteCase == ItemDeleteStubCases.SUCCESS
-                    }
-
-                    exec {
-                        responseItem = NoteModel()
-                        status = ContextStatus.FINISHING
-                    }
-                }
-            }
+            exec(itemDeleteStub)
 
             // job with db
             handler {
@@ -56,7 +42,7 @@ class ItemDeleteChain(
                     }
                     catch (e: Throwable){
                         status = ContextStatus.FAILING
-                        errors.add(GeneralError(code = "item-in-repo-add-error", e = e))
+                        errors.add(GeneralError(code = "item-in-repo-remove-error", e = e))
                     }
                 }
             }
