@@ -38,6 +38,10 @@ repositories {
     maven { url = uri("https://kotlin.bintray.com/ktor") }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+}
+
 dependencies {
     implementation(project(":ok-catalogue-backend-common"))
     implementation(project(":ok-catalogue-transport-common"))

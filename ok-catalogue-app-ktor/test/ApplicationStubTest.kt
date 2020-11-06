@@ -4,6 +4,7 @@ package ru.otus.otuskotlin
 import io.ktor.http.*
 import kotlin.test.*
 import io.ktor.server.testing.*
+import io.ktor.util.*
 import io.ktor.utils.io.charsets.Charsets
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -15,7 +16,8 @@ import ru.otus.otuskotlin.catalogue.transport.common.models.items.*
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-class ApplicationTest {
+class ApplicationStubTest {
+    @KtorExperimentalAPI
     @Test
     fun testRoot() {
         withTestApplication({ module(testing = true) }) {
@@ -26,6 +28,7 @@ class ApplicationTest {
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testGet(){
         withTestApplication({ module(testing = true)}){
@@ -51,12 +54,12 @@ class ApplicationTest {
                 //
 
                 val res = format.decodeFromString(CategoryGetResponse.serializer(), jsonString)
-
                 assertEquals("12345", res.data?.id)
             }
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testCreate(){
         withTestApplication({ module(testing = true)}){
@@ -90,6 +93,7 @@ class ApplicationTest {
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testDelete() {
         withTestApplication({ module(testing = true) }) {
@@ -121,6 +125,7 @@ class ApplicationTest {
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testRename() {
         withTestApplication({ module(testing = true) }) {
@@ -153,6 +158,7 @@ class ApplicationTest {
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testMap() {
         withTestApplication({ module(testing = true) }) {
@@ -211,6 +217,7 @@ class ApplicationTest {
         assertEquals(true, model is NoteCreateQuery)
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testAddItem() {
         withTestApplication({ module(testing = true) }) {
@@ -257,6 +264,7 @@ class ApplicationTest {
         }
     }
 
+    @KtorExperimentalAPI
     @Test
     fun testDeleteItem() {
         withTestApplication({ module(testing = true) }) {
