@@ -76,6 +76,10 @@ class CategoryRepositoryCassandra (
         mpr
     }
 
+    /**
+     *  Asynchronous function for getting a category from the db by [id].
+     *  @return a model of category within child categories, items and list of parents thread.
+     */
     override suspend fun get(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
@@ -120,6 +124,10 @@ class CategoryRepositoryCassandra (
 
     }
 
+    /**
+     *  Asynchronous recursive function for getting a tree of categories from the db by [id] of top category.
+     *  @return a model of category within tree of child categories.
+     */
     override suspend fun getMap(id: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
@@ -137,6 +145,10 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    /**
+     * Function that creates a note in the db table by [category]. Also it adds a children in parent category if exists.
+     * @return a model of created category from db table.
+     */
     override suspend fun create(category: CategoryModel): CategoryModel {
         val id = UUID.randomUUID().toString()
         val dto = of(category, id)
@@ -149,6 +161,10 @@ class CategoryRepositoryCassandra (
         return model
     }
 
+    /**
+     * Function that get a category from db table by [id] and saves it with a new [label].
+     * @return a model of saved category.
+     */
     override suspend fun rename(id: String, label: String): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         val dto = withTimeout(timeout.toMillis()){
@@ -156,8 +172,17 @@ class CategoryRepositoryCassandra (
         return save(dto.copy(label = label))
     }
 
+    /**
+     *  Function for delete tree of categories by top category [id]
+     *  @return map of categories
+     */
     override suspend fun delete(id: String): CategoryModel = deleteTree(id, true)
 
+    /**
+     * Function that add new [item] in category table and item table. It uses an item repository.
+     * Category should have type is equaled type of item.
+     * @return a model of item, got via item repository.
+     */
     override suspend fun addItem(item: ItemModel): ItemModel {
         if (item.categoryId.isBlank()) throw CategoryRepoWrongIdException(item.categoryId)
         if (item.id.isBlank()) throw ItemRepoWrongIdException(item.id)
@@ -172,6 +197,11 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    /**
+     * Function that delete [item] from category table and item table. It uses an item repository.
+     * Category should have type for type of item.
+     * @return a model of item, got via item repository.
+     */
     override suspend fun deleteItem(itemId: String, categoryId: String): ItemModel {
         if (categoryId.isBlank()) throw CategoryRepoWrongIdException(categoryId)
         if (itemId.isBlank()) throw ItemRepoWrongIdException(itemId)
@@ -186,7 +216,11 @@ class CategoryRepositoryCassandra (
         }
     }
 
-    //TODO: Think about if child category is already deleted, but parent is still linked for it
+    /**
+     * Asynchronous recursive function that deletes tree of child categories and items by top category [id].
+     * [needRemoveFromParent] is false for all inner calls, because parent category is already deleted.
+     * @return map of deleted categories.
+     */
     private suspend fun deleteTree(id: String, needRemoveFromParent: Boolean): CategoryModel {
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
@@ -238,6 +272,10 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    /**
+     * Helping function for save [dto] in category db table.
+     * @return a model of saved [dto].
+     */
     private suspend fun save(dto: CategoryCassandraDTO): CategoryModel{
         withTimeout(timeout.toMillis()){ mapper.saveAsync(dto).await()}
         return get(dto.id?:"")
@@ -253,6 +291,9 @@ class CategoryRepositoryCassandra (
         job.cancel()
     }
 
+    /**
+     * Fun that get item repository due to [type] of category.
+     */
     private  fun getRepoByType(type: String) =
             when(type.toLowerCase()){
                 "" -> null
@@ -261,6 +302,9 @@ class CategoryRepositoryCassandra (
                 else -> throw CategoryRepoInvalidTypeException(type)
             }
 
+    /**
+     * Handler for transformation tree of categories to plain list of categories.
+     */
     private fun Collection<CategoryModel>.treeToList(): Collection<CategoryModel>{
         val models = this.toMutableList()
         var counter = models.size
