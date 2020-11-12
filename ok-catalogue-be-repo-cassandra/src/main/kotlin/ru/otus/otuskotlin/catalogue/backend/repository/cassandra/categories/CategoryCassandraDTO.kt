@@ -1,11 +1,13 @@
 package ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories
 
+import com.datastax.driver.extras.codecs.jdk8.LocalDateCodec
 import com.datastax.driver.mapping.annotations.Column
 import com.datastax.driver.mapping.annotations.PartitionKey
 import com.datastax.driver.mapping.annotations.Table
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.CATEGORY_TABLE_NAME
 import java.time.LocalDate
+import java.util.*
 
 @Table(name = CATEGORY_TABLE_NAME)
 data class CategoryCassandraDTO (
@@ -28,11 +30,14 @@ data class CategoryCassandraDTO (
     @Column(name = COLUMN_ITEMS_ID)
     val items: Set<String>? = null,
 
-    @Column(name = COLUMN_CREATION_DATE)
+    @Column(name = COLUMN_CREATION_DATE, codec = LocalDateCodec::class)
     val creationDate: LocalDate? = null,
 
-    @Column(name = COLUMN_MODIFY_DATE)
-    var modifyDate: LocalDate? = null
+    @Column(name = COLUMN_MODIFY_DATE, codec = LocalDateCodec::class)
+    var modifyDate: LocalDate? = null,
+
+    @Column(name = COLUMN_LOCK_VERSION)
+    val lockVersion: String = UUID.randomUUID().toString()
 ) {
     fun toModel() = CategoryModel(
             id = id?:"",
@@ -53,6 +58,7 @@ data class CategoryCassandraDTO (
         const val COLUMN_ITEMS_ID = "items_id"
         const val COLUMN_CREATION_DATE = "creation_date"
         const val COLUMN_MODIFY_DATE = "modify_date"
+        const val COLUMN_LOCK_VERSION= "lock_version"
 
         fun of(model: CategoryModel) = of(model, model.id)
 

@@ -8,6 +8,8 @@ import com.datastax.driver.extras.codecs.jdk8.LocalDateCodec
 import com.datastax.driver.mapping.Mapper
 import com.datastax.driver.mapping.MappingManager
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.guava.await
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.*
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
@@ -18,6 +20,7 @@ import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.Cate
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_ITEMS_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_LABEL
+import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_LOCK_VERSION
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_MODIFY_DATE
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_PARENT_ID
 import ru.otus.otuskotlin.catalogue.backend.repository.cassandra.categories.CategoryCassandraDTO.Companion.COLUMN_TYPE
@@ -50,6 +53,7 @@ class CategoryRepositoryCassandra (
             .withCredentials(user, pass)
                 .withCodecRegistry(CodecRegistry().register(TypeCodec.set(TypeCodec.varchar())))
                 .withCodecRegistry(CodecRegistry().register(LocalDateCodec.instance))
+                .withCodecRegistry(CodecRegistry().register(TypeCodec.cboolean()))
             .build()
     }
 
@@ -64,6 +68,10 @@ class CategoryRepositoryCassandra (
         MappingManager(session)
     }
 
+    private val accessor: CategoryCassandraAccessor by lazy {
+        manager.createAccessor(CategoryCassandraAccessor::class.java)
+    }
+
     private val mapper: Mapper<CategoryCassandraDTO> by lazy {
         val mpr = manager.mapper(CategoryCassandraDTO::class.java, keySpace)
         runBlocking {
@@ -76,6 +84,7 @@ class CategoryRepositoryCassandra (
         mpr
     }
 
+    //TODO: children set to cell (id, label, type?), items - to cell or via accessor?
     /**
      *  Asynchronous function for getting a category from the db by [id].
      *  @return a model of category within child categories, items and list of parents thread.
@@ -93,15 +102,16 @@ class CategoryRepositoryCassandra (
                     parentId = parent.parentId
                 }
             }
-            val childrenJob: MutableList<Job> = mutableListOf()
+            val childrenJob: Flow<Job> = flow {
                 modelCassandra.children?.forEach {
-                    childrenJob.add(
-                            CoroutineScope(coroutineContext).launch {
+                           emit(CoroutineScope(coroutineContext).launch {
                                 val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
                                 model.children.add(child)
                             }
-                    )
+                           )
                 }
+            }
+
             //println("childrenJobs=${childrenJob.size}")
 
             val itemsJob: MutableList<Job> = mutableListOf()
@@ -117,13 +127,14 @@ class CategoryRepositoryCassandra (
             }
 
             parentsJob.join()
-            childrenJob.joinAll()
+            //childrenJob.joinAll()
             itemsJob.joinAll()
             model
         }
 
     }
 
+    //TODO: Refoctor head recursion to tailrec
     /**
      *  Asynchronous recursive function for getting a tree of categories from the db by [id] of top category.
      *  @return a model of category within tree of child categories.
@@ -145,6 +156,7 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    //TODO: Refactor via accessor with batch
     /**
      * Function that creates a note in the db table by [category]. Also it adds a children in parent category if exists.
      * @return a model of created category from db table.
@@ -161,6 +173,7 @@ class CategoryRepositoryCassandra (
         return model
     }
 
+    //TODO: Refactor via accessor
     /**
      * Function that get a category from db table by [id] and saves it with a new [label].
      * @return a model of saved category.
@@ -169,7 +182,15 @@ class CategoryRepositoryCassandra (
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         val dto = withTimeout(timeout.toMillis()){
             mapper.getAsync(id)?.await()?: throw CategoryRepoNotFoundException(id)}
-        return save(dto.copy(label = label))
+        if (accessor.rename(
+                        id = id,
+                        label = label,
+                        optLockKey = dto.lockVersion,
+                        nextLockKey = UUID.randomUUID().toString()
+                ).await().one()?.getBool(0) != true){
+            throw CategoryIsLockedException(id, dto.label?:"")
+        }
+        return dto.copy(label = label).toModel()
     }
 
     /**
@@ -197,6 +218,7 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    //TODO: Refactor via accessor with batch
     /**
      * Function that delete [item] from category table and item table. It uses an item repository.
      * Category should have type for type of item.
@@ -216,6 +238,7 @@ class CategoryRepositoryCassandra (
         }
     }
 
+    //TODO: Refactor head recursion to tailrec
     /**
      * Asynchronous recursive function that deletes tree of child categories and items by top category [id].
      * [needRemoveFromParent] is false for all inner calls, because parent category is already deleted.
@@ -342,6 +365,7 @@ class CategoryRepositoryCassandra (
                $COLUMN_ITEMS_ID set <text>,
                $COLUMN_CREATION_DATE date,
                $COLUMN_MODIFY_DATE date,
+               $COLUMN_LOCK_VERSION text,
 
                PRIMARY KEY ($COLUMN_ID)
             )

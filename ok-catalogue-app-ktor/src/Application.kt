@@ -37,8 +37,11 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module(testing: Boolean = false) {
 
     val config = HoconApplicationConfig(ConfigFactory.load())
-    //TODO: try with environment
+
     val cassandraConfig = CassandraConfig(config)
+
+        //doesn't work
+//    val cassandraConfig = CassandraConfig(environment.config)
 
     val itemRepoTest = NoteRepositoryInMemory(ttl = 30.toDuration(DurationUnit.MINUTES))
     val categoryRepoTest = CategoryRepositoryInMemory(ttl = 30.toDuration(DurationUnit.MINUTES))

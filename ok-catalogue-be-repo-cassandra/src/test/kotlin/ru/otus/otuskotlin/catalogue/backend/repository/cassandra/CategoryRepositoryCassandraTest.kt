@@ -107,6 +107,17 @@ internal class CategoryRepositoryCassandraTest{
     }
 
     @Test
+    fun createAndRenameTest(){
+        runBlocking {
+            val model = repo.create(CategoryModel(label = "old-label-test"))
+
+            val result = repo.rename(model.id, "new-label-test")
+            println(result)
+            assertEquals(result.label, "new-label-test")
+        }
+    }
+
+    @Test
     fun createAndDeleteTest(){
         runBlocking {
             repo.create(CategoryModel(parentId = "delete-id", label = "child-4"))
