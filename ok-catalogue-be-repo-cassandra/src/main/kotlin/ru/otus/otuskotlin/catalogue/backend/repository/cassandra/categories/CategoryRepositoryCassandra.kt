@@ -10,6 +10,7 @@ import com.datastax.driver.mapping.MappingManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.guava.await
 import ru.otus.otuskotlin.catalogue.backend.common.exceptions.*
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.CategoryModel
@@ -60,7 +61,9 @@ class CategoryRepositoryCassandra (
     private val session: Session by lazy {
         runBlocking {
             createKeySpace()
-            cluster.connect(keySpace).apply { createTable() }
+            cluster.connect(keySpace).apply {
+                createChildType()
+                createTable() }
         }
     }
 
@@ -74,6 +77,8 @@ class CategoryRepositoryCassandra (
 
     private val mapper: Mapper<CategoryCassandraDTO> by lazy {
         val mpr = manager.mapper(CategoryCassandraDTO::class.java, keySpace)
+        manager.udtCodec(CategoryHeaderCassandraDTO::class.java)
+
         runBlocking {
             initObjects.treeToList().map {
                 withTimeout(timeout.toMillis()){
@@ -83,6 +88,8 @@ class CategoryRepositoryCassandra (
         }
         mpr
     }
+
+
 
     //TODO: children set to cell (id, label, type?), items - to cell or via accessor?
     /**
@@ -102,15 +109,25 @@ class CategoryRepositoryCassandra (
                     parentId = parent.parentId
                 }
             }
-            val childrenJob: Flow<Job> = flow {
-                modelCassandra.children?.forEach {
-                           emit(CoroutineScope(coroutineContext).launch {
-                                val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
-                                model.children.add(child)
-                            }
-                           )
-                }
-            }
+//            val childrenJob: Flow<Job> = flow {
+//                modelCassandra.children?.forEach {
+//                           emit(CoroutineScope(coroutineContext).launch {
+//                                val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
+//                                model.children.add(child)
+//                            }
+//                           )
+//                }
+//            }
+
+//            val childrenJob: MutableList<Job> = mutableListOf()
+//                modelCassandra.children?.forEach {
+//                    childrenJob.add(CoroutineScope(coroutineContext).launch {
+//                        val child = mapper.getAsync(it)?.await()?.toModel()?: throw CategoryRepoNotFoundException(it)
+//                        model.children.add(child)
+//                    }
+//                    )
+//                }
+
 
             //println("childrenJobs=${childrenJob.size}")
 
@@ -128,6 +145,7 @@ class CategoryRepositoryCassandra (
 
             parentsJob.join()
             //childrenJob.joinAll()
+            //childrenJob.take(100)
             itemsJob.joinAll()
             model
         }
@@ -147,7 +165,7 @@ class CategoryRepositoryCassandra (
             val jobs: MutableList<Job> = mutableListOf()
             modelCassandra.children?.forEach {
                   val job = CoroutineScope(coroutineContext).launch {
-                    model.children.add(getMap(it))
+                    model.children.add(getMap(it.id ?:""))
                  }
                  jobs.add(job)
             }
@@ -167,7 +185,7 @@ class CategoryRepositoryCassandra (
         val model = save(dto)
         if (category.parentId.isNotBlank()){
             val parent = get(category.parentId)
-            parent.children.add(CategoryModel(id = id))
+            parent.children.add(model)
             save(of(parent))
         }
         return model
@@ -258,7 +276,7 @@ class CategoryRepositoryCassandra (
                     parent?.let{
                         val children = parent.children?.toMutableSet()
                         children?.let {
-                            it.remove(id)
+                            it.remove(it.find { it.id == id })
                             mapper.saveAsync(parent.copy(children = children))
                         }
                     }
@@ -285,7 +303,7 @@ class CategoryRepositoryCassandra (
             val jobs: MutableList<Job> = mutableListOf()
             modelCassandra.children?.forEach {
                 val job = CoroutineScope(coroutineContext).launch {
-                    model.children.add(deleteTree(it, false))
+                    model.children.add(deleteTree(it.id?:"", false))
                 }
                 jobs.add(job)
             }
@@ -354,6 +372,16 @@ class CategoryRepositoryCassandra (
         """.trimIndent()).await()
     }
 
+    private suspend fun Session.createChildType() {
+        executeAsync("""
+            CREATE TYPE IF NOT EXISTS child (
+                id text,
+                label text,
+                type text
+            )
+        """.trimIndent()).await()
+    }
+
     private suspend fun Session.createTable() {
         executeAsync("""
             CREATE TABLE IF NOT EXISTS $CATEGORY_TABLE_NAME (
@@ -361,7 +389,7 @@ class CategoryRepositoryCassandra (
                $COLUMN_TYPE text,
                $COLUMN_LABEL text,
                $COLUMN_PARENT_ID text,
-               $COLUMN_CHILDREN_ID set <text>,
+               $COLUMN_CHILDREN_ID set <frozen<child>>,
                $COLUMN_ITEMS_ID set <text>,
                $COLUMN_CREATION_DATE date,
                $COLUMN_MODIFY_DATE date,

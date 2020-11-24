@@ -59,6 +59,7 @@ internal class ApplicationInMemoryTest {
                     debug = CategoryCreateQuery.Debug(dbMode = CatalogueDbModes.TEST)
                 )
                 val  bodyString = format.encodeToString(CategoryCreateQuery.serializer(), body)
+                println(bodyString)
                 setBody(bodyString)
                 addHeader("Content-Type", "application/json")
             }.apply {

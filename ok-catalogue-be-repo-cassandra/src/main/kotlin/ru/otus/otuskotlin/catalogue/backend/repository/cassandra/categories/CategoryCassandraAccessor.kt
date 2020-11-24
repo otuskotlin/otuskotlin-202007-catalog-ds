@@ -20,5 +20,11 @@ interface CategoryCassandraAccessor {
     companion object{
         const val QUERY_RENAME = "UPDATE categories SET label = :new_label, lock_version = :new_lock " +
                 "WHERE id = :id IF lock_version = :lock_key;"
+
+        const val QUERY_CREATE = "BEGIN BATCH" +
+                "INSERT INTO categories (id, type, label, parent_id, creation_date, modify_date) " +
+                "VALUES (:id, :type, :label, :parent_id, :creation_date, :creation_date); " +
+                "UPDATE categories SET children = children + :child WHERE id = :parent_id;" +
+                "APPLY BATCH;"
     }
 }
