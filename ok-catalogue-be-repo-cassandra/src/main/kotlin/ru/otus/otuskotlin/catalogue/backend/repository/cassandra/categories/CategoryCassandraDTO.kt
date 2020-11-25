@@ -38,12 +38,13 @@ data class CategoryCassandraDTO (
     @Column(name = COLUMN_LOCK_VERSION)
     val lockVersion: String = UUID.randomUUID().toString()
 ) {
-    fun toModel() = CategoryModel(
+    fun toModel(withRelated: Boolean = true) = CategoryModel(
             id = id?:"",
             type = type?:"",
             label = label?:"",
             parentId = parentId?:"",
-            children = children?.map { it.toModel() }?.toMutableSet()?: mutableSetOf(),
+            children = if (withRelated) children?.map { it.toModel() }?.toMutableSet()?: mutableSetOf()
+                        else mutableSetOf(),
             creationDate = creationDate?: LocalDate.MIN,
             modifyDate = modifyDate?: creationDate?: LocalDate.MIN
     )

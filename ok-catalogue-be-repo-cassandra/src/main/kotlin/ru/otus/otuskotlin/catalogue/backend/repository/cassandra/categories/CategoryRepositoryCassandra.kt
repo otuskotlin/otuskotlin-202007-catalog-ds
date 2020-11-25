@@ -161,7 +161,7 @@ class CategoryRepositoryCassandra (
         if (id.isBlank()) throw CategoryRepoWrongIdException(id)
         return withTimeout(timeout.toMillis()){
             val modelCassandra = mapper.getAsync(id)?.await() ?: throw CategoryRepoNotFoundException(id)
-            val model = modelCassandra.toModel()
+            val model = modelCassandra.toModel(false)
             val jobs: MutableList<Job> = mutableListOf()
             modelCassandra.children?.forEach {
                   val job = CoroutineScope(coroutineContext).launch {

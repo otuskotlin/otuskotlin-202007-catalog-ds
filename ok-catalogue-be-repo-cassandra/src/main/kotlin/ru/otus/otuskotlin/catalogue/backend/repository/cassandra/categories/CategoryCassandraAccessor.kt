@@ -17,6 +17,10 @@ interface CategoryCassandraAccessor {
             @Param("new_lock") nextLockKey: String
     ): ListenableFuture<ResultSet>
 
+//    fun create(
+//
+//    ): ListenableFuture<Result<CategoryCassandraDTO>>
+
     companion object{
         const val QUERY_RENAME = "UPDATE categories SET label = :new_label, lock_version = :new_lock " +
                 "WHERE id = :id IF lock_version = :lock_key;"
