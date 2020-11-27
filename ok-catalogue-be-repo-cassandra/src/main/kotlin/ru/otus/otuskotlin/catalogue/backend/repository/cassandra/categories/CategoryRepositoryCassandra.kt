@@ -68,7 +68,9 @@ class CategoryRepositoryCassandra (
     }
 
     private val manager: MappingManager by lazy {
-        MappingManager(session)
+        MappingManager(session).apply {
+         this.udtCodec(CategoryHeaderCassandraDTO::class.java)
+        }
     }
 
     private val accessor: CategoryCassandraAccessor by lazy {
@@ -77,7 +79,7 @@ class CategoryRepositoryCassandra (
 
     private val mapper: Mapper<CategoryCassandraDTO> by lazy {
         val mpr = manager.mapper(CategoryCassandraDTO::class.java, keySpace)
-        manager.udtCodec(CategoryHeaderCassandraDTO::class.java)
+        //manager.udtCodec(CategoryHeaderCassandraDTO::class.java)
 
         runBlocking {
             initObjects.treeToList().map {
@@ -207,6 +209,11 @@ class CategoryRepositoryCassandra (
                         nextLockKey = UUID.randomUUID().toString()
                 ).await().one()?.getBool(0) != true){
             throw CategoryIsLockedException(id, dto.label?:"")
+        }
+        if(!dto.parentId.isNullOrBlank()){
+            val parent = mapper.getAsync(dto.parentId)?.await()?.toModel()?: throw CategoryRepoNotFoundException(id)
+            parent.children.find { it.id == id }?.label = label
+            mapper.saveAsync(of(parent)).await()
         }
         return dto.copy(label = label).toModel()
     }
