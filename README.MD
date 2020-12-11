@@ -22,7 +22,6 @@ API:
 
     3.3. Изменить сущность.
 
-
 MODULES:
 
 **ok-catalogue-backend-common** - Основной модуль бэкенда.
@@ -42,3 +41,4 @@ MODULES:
 **ok-catalogue-be-repo-inmemory** - Модуль репозитория cache2k
 
 **ok-catalogue-be-repo-cassandra** - Модуль репозитория Cassandra
+
