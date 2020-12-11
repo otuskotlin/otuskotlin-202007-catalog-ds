@@ -38,11 +38,17 @@ repositories {
     maven { url = uri("https://kotlin.bintray.com/ktor") }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+}
+
 dependencies {
     implementation(project(":ok-catalogue-backend-common"))
     implementation(project(":ok-catalogue-transport-common"))
     implementation(project(":ok-catalogue-transport-rest"))
     implementation(project(":ok-catalogue-be-logic"))
+    implementation(project(":ok-catalogue-be-repo-inmemory"))
+    implementation(project(":ok-catalogue-be-repo-cassandra"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("io.ktor:ktor-server-netty:$ktorVersion")

@@ -1,6 +1,7 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.WorkModes
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemCreateStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemDeleteStubCases
 import ru.otus.otuskotlin.catalogue.backend.common.models.items.ItemModel
@@ -19,6 +20,7 @@ fun ItemContext.setQuery(delItem: ItemDeleteQuery) = this.apply {
         ItemDeleteQuery.StubCases.SUCCESS -> ItemDeleteStubCases.SUCCESS
         else -> ItemDeleteStubCases.NONE
     }
+    workMode = delItem.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 
@@ -29,6 +31,7 @@ fun ItemContext.setQuery(addItem: ItemCreateQuery) = this.apply {
         ItemCreateQuery.StubCases.SUCCESS -> ItemCreateStubCases.SUCCESS
         else -> ItemCreateStubCases.NONE
     }
+    workMode = addItem.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 
@@ -52,6 +55,7 @@ fun ItemCreateQuery.model(): ItemModel{
     when(this){
         is NoteCreateQuery -> return NoteModel(
             id = id?:"",
+            categoryId = categoryId?:"",
             header = header?:"",
             description = description?:"",
             preview = preview?:""
@@ -64,6 +68,7 @@ fun ItemModel.toDTO(): ItemInfo{
     when(this){
         is NoteModel -> return NoteInfo(
                 id = id.toDTOString(),
+                categoryId = categoryId.toDTOString(),
                 header = header.toDTOString(),
                 description = description.toDTOString(),
                 preview = preview.toDTOString()

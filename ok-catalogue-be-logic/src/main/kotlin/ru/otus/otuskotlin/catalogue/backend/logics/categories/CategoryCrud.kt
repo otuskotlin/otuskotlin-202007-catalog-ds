@@ -1,13 +1,17 @@
 package ru.otus.otuskotlin.catalogue.backend.logics.categories
 
 import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
+import ru.otus.otuskotlin.catalogue.backend.common.repositories.ICategoryRepository
 
-class CategoryCrud {
-    private val getChain = CategoryGetChain()
-    private val createChain = CategoryCreateChain()
-    private val renameChain = CategoryRenameChain()
-    private val deleteChain = CategoryDeleteChain()
-    private val getMapChain = CategoryGetMapChain()
+class CategoryCrud(
+    categoryRepoTest: ICategoryRepository = ICategoryRepository.NONE,
+    categoryRepoProd: ICategoryRepository = ICategoryRepository.NONE
+) {
+    private val getChain = CategoryGetChain(categoryRepoTest, categoryRepoProd)
+    private val createChain = CategoryCreateChain(categoryRepoTest, categoryRepoProd)
+    private val renameChain = CategoryRenameChain(categoryRepoTest, categoryRepoProd)
+    private val deleteChain = CategoryDeleteChain(categoryRepoTest, categoryRepoProd)
+    private val getMapChain = CategoryGetMapChain(categoryRepoTest, categoryRepoProd)
 
     suspend fun get(context: CategoryContext) = getChain.exec(context)
     suspend fun getMap(context: CategoryContext) = getMapChain.exec(context)

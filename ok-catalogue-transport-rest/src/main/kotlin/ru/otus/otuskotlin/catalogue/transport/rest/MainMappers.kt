@@ -1,11 +1,9 @@
 package ru.otus.otuskotlin.catalogue.transport.rest
 
-import ru.otus.otuskotlin.catalogue.backend.common.contexts.BaseContext
-import ru.otus.otuskotlin.catalogue.backend.common.contexts.CategoryContext
-import ru.otus.otuskotlin.catalogue.backend.common.contexts.ContextStatus
-import ru.otus.otuskotlin.catalogue.backend.common.contexts.ItemContext
+import ru.otus.otuskotlin.catalogue.backend.common.contexts.*
 import ru.otus.otuskotlin.catalogue.backend.common.models.IErrorModel
 import ru.otus.otuskotlin.catalogue.backend.common.models.categories.*
+import ru.otus.otuskotlin.catalogue.transport.common.models.CatalogueDbModes
 import ru.otus.otuskotlin.catalogue.transport.common.models.ErrorDTO
 import ru.otus.otuskotlin.catalogue.transport.common.models.ResponseModel
 import ru.otus.otuskotlin.catalogue.transport.common.models.StatusDTO
@@ -22,6 +20,7 @@ fun CategoryContext.setQuery(create: CategoryCreateQuery) = this.apply {
         CategoryCreateQuery.StubCases.SUCCESS -> CategoryCreateStubCases.SUCCESS
         else -> CategoryCreateStubCases.NONE
     }
+    workMode = create.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 fun CategoryContext.setQuery(delete: CategoryDeleteQuery) = this.apply {
@@ -30,6 +29,7 @@ fun CategoryContext.setQuery(delete: CategoryDeleteQuery) = this.apply {
         CategoryDeleteQuery.StubCases.SUCCESS -> CategoryDeleteStubCases.SUCCESS
         else -> CategoryDeleteStubCases.NONE
     }
+    workMode = delete.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 fun CategoryContext.setQuery(get: CategoryGetQuery) = this.apply {
@@ -38,6 +38,7 @@ fun CategoryContext.setQuery(get: CategoryGetQuery) = this.apply {
         CategoryGetQuery.StubCases.SUCCESS -> CategoryGetStubCases.SUCCESS
         else -> CategoryGetStubCases.NONE
     }
+    workMode = get.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 fun CategoryContext.setQuery(rename: CategoryRenameQuery) = this.apply {
@@ -47,6 +48,7 @@ fun CategoryContext.setQuery(rename: CategoryRenameQuery) = this.apply {
         CategoryRenameQuery.StubCases.SUCCESS -> CategoryRenameStubCases.SUCCESS
         else -> CategoryRenameStubCases.NONE
     }
+    workMode = rename.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 fun CategoryContext.setQuery(getMap: CategoryGetMapQuery) = this.apply {
@@ -55,6 +57,7 @@ fun CategoryContext.setQuery(getMap: CategoryGetMapQuery) = this.apply {
         CategoryGetMapQuery.StubCases.SUCCESS -> CategoryGetMapStubCases.SUCCESS
         else -> CategoryGetMapStubCases.NONE
     }
+    workMode = getMap.debug?.dbMode?.toModel()?: WorkModes.DEFAULT
 }
 
 fun CategoryContext.resultCategory() = CategoryGetResponse(
@@ -155,6 +158,11 @@ fun IErrorModel.Levels.toDTO() = when{
     isError -> ErrorDTO.Level.ERROR
     isWarning -> ErrorDTO.Level.WARNING
     else -> ErrorDTO.Level.SUCCESS
+}
+
+fun CatalogueDbModes.toModel() = when(this){
+    CatalogueDbModes.PROD -> WorkModes.PROD
+    CatalogueDbModes.TEST -> WorkModes.TEST
 }
 
 internal fun String.toDTOString() = this.takeIf { it.isNotBlank() }
