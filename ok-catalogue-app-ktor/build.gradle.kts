@@ -9,6 +9,8 @@ plugins {
     application
     kotlin("jvm")
     id("com.bmuschko.docker-java-application")
+
+    kotlin("plugin.serialization")
 }
 
 group = rootProject.group
@@ -57,6 +59,8 @@ dependencies {
     implementation("io.ktor:ktor-server-host-common:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+
+    api("org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.1")
 }
 
 kotlin.sourceSets["main"].kotlin.srcDirs("src")

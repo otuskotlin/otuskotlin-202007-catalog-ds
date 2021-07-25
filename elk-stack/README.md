@@ -22,4 +22,5 @@ docker-compose -f docker-compose-light.yml up
 ```bash
 sudo sh -c "echo \"vm.max_map_count=262144\" > /etc/sysctl.d/10-elasticsearch.conf"
 sudo sysctl -p
+
 ```
